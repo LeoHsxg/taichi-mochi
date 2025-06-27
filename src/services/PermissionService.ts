@@ -1,5 +1,6 @@
 import { PermissionsAndroid, Alert, Linking, Platform } from 'react-native';
 import { PermissionStatus } from '../types';
+import { FocusNativeModule } from '../types/native';
 
 class PermissionService {
   /**
@@ -32,10 +33,10 @@ class PermissionService {
     if (Platform.OS !== 'android') return true;
 
     try {
-      // 這裡需要實作原生模組來檢查 PACKAGE_USAGE_STATS 權限
-      // 暫時返回 false，需要實作原生橋接
-      console.log('檢查使用情況存取權限 - 需要原生模組實作');
-      return false;
+      // 使用原生模組檢查 PACKAGE_USAGE_STATS 權限
+      const hasPermission = await FocusNativeModule.hasUsageAccess();
+      console.log('使用情況存取權限檢查結果:', hasPermission);
+      return hasPermission;
     } catch (error) {
       console.error('檢查使用情況存取權限失敗:', error);
       return false;
@@ -49,10 +50,10 @@ class PermissionService {
     if (Platform.OS !== 'android') return true;
 
     try {
-      // SYSTEM_ALERT_WINDOW 權限需要特殊處理，無法透過 PermissionsAndroid.check 檢查
-      // 需要實作原生模組來檢查
-      console.log('檢查覆蓋權限 - 需要原生模組實作');
-      return false;
+      // 使用原生模組檢查 SYSTEM_ALERT_WINDOW 權限
+      const hasPermission = await FocusNativeModule.canDrawOverlays();
+      console.log('覆蓋權限檢查結果:', hasPermission);
+      return hasPermission;
     } catch (error) {
       console.error('檢查覆蓋權限失敗:', error);
       return false;
@@ -110,7 +111,7 @@ class PermissionService {
 
     try {
       console.log('開啟使用情況存取設定頁面');
-      await Linking.openSettings();
+      FocusNativeModule.openUsageAccessSettings();
     } catch (error) {
       console.error('開啟使用情況存取設定失敗:', error);
       Alert.alert('錯誤', '無法開啟設定頁面');

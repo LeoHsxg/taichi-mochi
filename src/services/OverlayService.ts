@@ -1,4 +1,6 @@
+import { Platform } from 'react-native';
 import { OverlayConfig } from '../types';
+import { FocusNativeModule } from '../types/native';
 
 class OverlayService {
   private isVisible = false;
@@ -8,18 +10,27 @@ class OverlayService {
    * 顯示 Overlay
    */
   showOverlay(config: OverlayConfig): void {
+    if (Platform.OS !== 'android') {
+      console.log('Overlay 僅支援 Android 平台');
+      return;
+    }
+
     this.currentConfig = config;
     this.isVisible = true;
 
-    // 這裡需要實作原生模組來顯示 Overlay
-    // 使用 WindowManager 或 SYSTEM_ALERT_WINDOW 權限
-    console.log('顯示 Overlay:', config);
+    try {
+      // 使用原生模組顯示 Overlay
+      FocusNativeModule.showOverlay(config.message);
+      console.log('顯示 Overlay:', config);
 
-    // 如果設定自動隱藏，設定定時器
-    if (config.autoHide && config.autoHideDelay) {
-      setTimeout(() => {
-        this.hideOverlay();
-      }, config.autoHideDelay);
+      // 如果設定自動隱藏，設定定時器
+      if (config.autoHide && config.autoHideDelay) {
+        setTimeout(() => {
+          this.hideOverlay();
+        }, config.autoHideDelay);
+      }
+    } catch (error) {
+      console.error('顯示 Overlay 失敗:', error);
     }
   }
 
@@ -27,11 +38,18 @@ class OverlayService {
    * 隱藏 Overlay
    */
   hideOverlay(): void {
+    if (Platform.OS !== 'android') return;
+
     this.isVisible = false;
     this.currentConfig = undefined;
 
-    // 這裡需要實作原生模組來隱藏 Overlay
-    console.log('隱藏 Overlay');
+    try {
+      // 使用原生模組隱藏 Overlay
+      FocusNativeModule.hideOverlay();
+      console.log('隱藏 Overlay');
+    } catch (error) {
+      console.error('隱藏 Overlay 失敗:', error);
+    }
   }
 
   /**
@@ -42,7 +60,11 @@ class OverlayService {
 
     this.currentConfig = { ...this.currentConfig, ...config };
 
-    // 這裡需要實作原生模組來更新 Overlay 內容
+    // 重新顯示 Overlay 來更新內容
+    if (config.message) {
+      this.showOverlay(this.currentConfig);
+    }
+
     console.log('更新 Overlay:', this.currentConfig);
   }
 

@@ -1,5 +1,6 @@
-import { AppState, AppStateStatus } from 'react-native';
+import { AppState, AppStateStatus, Platform } from 'react-native';
 import { AppInfo, DistractingApp } from '../types';
+import { FocusNativeModule } from '../types/native';
 
 class AppMonitorService {
   private isMonitoring = false;
@@ -29,6 +30,17 @@ class AppMonitorService {
     if (this.isMonitoring) return;
 
     this.isMonitoring = true;
+
+    // 啟動原生前景監控服務
+    if (Platform.OS === 'android') {
+      try {
+        FocusNativeModule.startForegroundMonitor();
+        console.log('原生前景監控服務已啟動');
+      } catch (error) {
+        console.error('啟動原生前景監控服務失敗:', error);
+      }
+    }
+
     this.monitoringInterval = setInterval(() => {
       this.checkForegroundApp();
     }, 1000); // 每秒檢查一次
@@ -50,6 +62,16 @@ class AppMonitorService {
       this.monitoringInterval = undefined;
     }
 
+    // 停止原生前景監控服務
+    if (Platform.OS === 'android') {
+      try {
+        FocusNativeModule.stopForegroundMonitor();
+        console.log('原生前景監控服務已停止');
+      } catch (error) {
+        console.error('停止原生前景監控服務失敗:', error);
+      }
+    }
+
     // AppState 在新版本中不需要手動移除監聽器
     // 監聽器會在組件卸載時自動清理
   }
@@ -59,13 +81,15 @@ class AppMonitorService {
    */
   private async checkForegroundApp(): Promise<void> {
     try {
-      // 這裡需要實作原生模組來獲取前景應用程式資訊
-      // 暫時使用模擬資料
-      const foregroundApp = await this.getForegroundAppInfo();
+      if (Platform.OS !== 'android') return;
 
-      if (foregroundApp && this.isDistractingApp(foregroundApp.packageName)) {
+      // 使用原生模組獲取前景應用程式資訊
+      const packageName = await FocusNativeModule.getForegroundApp();
+
+      if (packageName && this.isDistractingApp(packageName)) {
+        const appInfo = this.getAppInfo(packageName);
         this.currentForegroundApp = {
-          ...foregroundApp,
+          ...appInfo,
           isDistracting: true,
           lastOpened: new Date(),
         };
@@ -80,12 +104,17 @@ class AppMonitorService {
   }
 
   /**
-   * 獲取前景應用程式資訊
+   * 獲取應用程式資訊
    */
-  private async getForegroundAppInfo(): Promise<AppInfo | null> {
-    // 這裡需要實作原生模組來獲取前景應用程式資訊
-    // 使用 UsageStatsManager API
-    return null;
+  private getAppInfo(packageName: string): AppInfo {
+    const distractingApp = this.distractingApps.find(
+      app => app.packageName === packageName,
+    );
+    return {
+      packageName,
+      appName: distractingApp?.appName || packageName,
+      isDistracting: !!distractingApp,
+    };
   }
 
   /**
