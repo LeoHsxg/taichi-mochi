@@ -9,14 +9,16 @@ import android.view.accessibility.AccessibilityNodeInfo
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.modules.core.DeviceEventManagerModule
 
+// 主要使用無障礙服務 AccessibilityService 實現前景應用程式的變更監控
+// 並將變更事件透過 React Native bridge 傳遞給 JS 層
 class AppWatcherService : AccessibilityService() {
     
     companion object {
         private const val TAG = "AppWatcherService"
         private var instance: AppWatcherService? = null
         
+        // 檢查 AppWatcherService 是否啟動與取得實例
         fun getInstance(): AppWatcherService? = instance
-        
         fun isRunning(): Boolean = instance != null
     }
     
@@ -26,6 +28,8 @@ class AppWatcherService : AccessibilityService() {
     private var lastTime: Long = 0
     private var HOME_PKG: String? = null
     
+    // NEED TO UNDERSTAND
+    // 好好笑，我到現在還是不知道什麼是 intent
     override fun onServiceConnected() {
         super.onServiceConnected()
         Log.d(TAG, "AccessibilityService 已連接")

@@ -7,10 +7,15 @@ import com.facebook.react.bridge.*
 import com.facebook.react.module.annotations.ReactModule
 import com.facebook.react.modules.core.DeviceEventManagerModule
 
+/**
+ * 這是暴露給 React Native 的橋接模組 (Bridge Module)，提供 JS 層呼叫的原生方法
+ */
 @ReactModule(name = FocusNativeModule.NAME)
 class FocusNativeModule(reactContext: ReactApplicationContext) : ReactContextBaseJavaModule(reactContext) {
     companion object {
         const val NAME = "FocusNativeModule"
+        // 儲存 ReactApplicationContext 的實例
+        // NEED TO UNDERSTAND
         var reactContext: ReactApplicationContext? = null
     }
 
@@ -18,15 +23,10 @@ class FocusNativeModule(reactContext: ReactApplicationContext) : ReactContextBas
 
     override fun initialize() {
         super.initialize()
+        // 在模組初始化時，將 ReactApplicationContext 實例儲存起來
+        // 這樣我們可以在模組的其他方法中使用它
+        // NEED TO UNDERSTAND
         reactContext = reactApplicationContext
-    }
-
-    // 檢查浮動視窗權限
-    @ReactMethod
-    fun canDrawOverlays(promise: Promise) {
-        val context = reactApplicationContext
-        val result = Settings.canDrawOverlays(context)
-        promise.resolve(result)
     }
 
     // 跳轉到無障礙服務設定頁
@@ -58,6 +58,14 @@ class FocusNativeModule(reactContext: ReactApplicationContext) : ReactContextBas
         appWatcher?.stopMonitoring()
     }
 
+    // 檢查浮動視窗權限
+    @ReactMethod
+    fun canDrawOverlays(promise: Promise) {
+        val context = reactApplicationContext
+        val result = Settings.canDrawOverlays(context)
+        promise.resolve(result)
+    }
+
     // 顯示浮動視窗
     @ReactMethod
     fun showOverlay(message: String) {
@@ -73,7 +81,9 @@ class FocusNativeModule(reactContext: ReactApplicationContext) : ReactContextBas
         reactApplicationContext.stopService(intent)
     }
 
-    // 發送事件到 React Native
+    // 發送事件到 React Native，較少使用
+    // 在 AppMonitorService.kt 中使用
+    // NEED TO UNDERSTAND
     fun sendEvent(eventName: String, params: WritableMap?) {
         reactApplicationContext
             .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)

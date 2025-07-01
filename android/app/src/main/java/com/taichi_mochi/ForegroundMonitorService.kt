@@ -5,6 +5,9 @@ import android.content.Intent
 import android.os.Build
 import android.os.IBinder
 
+// 使用前台服務 + UsageStats 輪詢前景 App，並透過 Broadcast/Callback 回傳 JS
+// 因為太耗電，現已全面替換為使用 AccessibilityService 的 AppWatcherService.kt
+// NEED TO UNDERSTAND
 class ForegroundMonitorService : Service() {
     override fun onBind(intent: Intent?): IBinder? = null
 
