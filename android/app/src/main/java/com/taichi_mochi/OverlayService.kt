@@ -35,8 +35,9 @@ class OverlayService : Service() {
         // 創建全螢幕白色背景的佈局
         val layout = LinearLayout(this)
         layout.orientation = LinearLayout.VERTICAL
-        layout.setBackgroundColor(0xFFFFFFFF.toInt()) // 純白色背景
+        layout.setBackgroundColor(0x88FFFFFF.toInt()) // 純白色背景
         layout.gravity = Gravity.CENTER
+        layout.setPadding(60, 60, 60, 60)
         
         // 添加標題文字
         val titleView = TextView(this)
@@ -64,16 +65,22 @@ class OverlayService : Service() {
         button.setOnClickListener {
             Log.d("OverlayService", "Button clicked, launching app")
             val launchIntent = packageManager.getLaunchIntentForPackage(packageName)
-            launchIntent?.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            startActivity(launchIntent)
+            if (launchIntent != null) {
+                launchIntent.addFlags(
+                Intent.FLAG_ACTIVITY_NEW_TASK or 
+                Intent.FLAG_ACTIVITY_CLEAR_TOP or
+                Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
+                )
+                startActivity(launchIntent)
+            }
             stopSelf()
         }
         layout.addView(button)
 
         // 設定全螢幕視窗參數
         val params = WindowManager.LayoutParams(
-            WindowManager.LayoutParams.MATCH_PARENT, // 全螢幕寬度
-            WindowManager.LayoutParams.MATCH_PARENT, // 全螢幕高度
+            WindowManager.LayoutParams.WRAP_CONTENT, // 全螢幕寬度
+            WindowManager.LayoutParams.WRAP_CONTENT, // 全螢幕高度
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O)
                 WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
             else

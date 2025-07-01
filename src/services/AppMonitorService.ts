@@ -7,10 +7,10 @@ import {
 } from 'react-native';
 import { AppInfo, DistractingApp } from '../types';
 import { FocusNativeModule } from '../types/native';
+import { overlayService } from './OverlayService';
 
 class AppMonitorService {
   private isMonitoring = false;
-  private monitoringInterval?: NodeJS.Timeout;
   private currentForegroundApp?: AppInfo;
   private distractingApps: DistractingApp[] = [];
   private onDistractingAppDetected?: (appInfo: AppInfo) => void;
@@ -35,35 +35,22 @@ class AppMonitorService {
    */
   async startMonitoring(): Promise<void> {
     if (this.isMonitoring) return;
-
     this.isMonitoring = true;
-
     if (Platform.OS === 'android') {
       try {
-        // 優先使用 AccessibilityService
         const isAccessibilityEnabled =
           await FocusNativeModule.isAccessibilityServiceEnabled();
-
         if (isAccessibilityEnabled) {
-          // 使用 AccessibilityService 監控
           FocusNativeModule.startAccessibilityMonitoring();
           this.setupAccessibilityEventEmitter();
           console.log('AccessibilityService 監控已啟動');
         } else {
-          // 備用方案：使用前景服務
-          FocusNativeModule.startForegroundMonitor();
-          console.log('原生前景監控服務已啟動');
-
-          this.monitoringInterval = setInterval(() => {
-            this.checkForegroundApp();
-          }, 1000); // 每秒檢查一次
+          console.warn('請先啟用無障礙服務！');
         }
       } catch (error) {
         console.error('啟動監控服務失敗:', error);
       }
     }
-
-    // 監聽應用程式狀態變化
     AppState.addEventListener('change', this.handleAppStateChange);
   }
 
@@ -72,33 +59,19 @@ class AppMonitorService {
    */
   stopMonitoring(): void {
     if (!this.isMonitoring) return;
-
     this.isMonitoring = false;
-
-    if (this.monitoringInterval) {
-      clearInterval(this.monitoringInterval);
-      this.monitoringInterval = undefined;
-    }
-
-    // 停止原生監控服務
     if (Platform.OS === 'android') {
       try {
-        FocusNativeModule.stopForegroundMonitor();
         FocusNativeModule.stopAccessibilityMonitoring();
         console.log('監控服務已停止');
       } catch (error) {
         console.error('停止監控服務失敗:', error);
       }
     }
-
-    // 清理事件監聽器
     if (this.eventEmitter) {
       this.eventEmitter.removeAllListeners('onForegroundAppChanged');
       this.eventEmitter = undefined;
     }
-
-    // AppState 在新版本中不需要手動移除監聽器
-    // 監聽器會在組件卸載時自動清理
   }
 
   /**
@@ -106,7 +79,6 @@ class AppMonitorService {
    */
   private setupAccessibilityEventEmitter(): void {
     if (Platform.OS !== 'android') return;
-
     this.eventEmitter = new NativeEventEmitter(NativeModules.FocusNativeModule);
     this.eventEmitter.addListener(
       'onForegroundAppChanged',
@@ -128,37 +100,17 @@ class AppMonitorService {
         isDistracting: true,
         lastOpened: new Date(),
       };
-
       if (this.onDistractingAppDetected) {
         this.onDistractingAppDetected(this.currentForegroundApp);
       }
-    }
-  }
-
-  /**
-   * 檢查前景應用程式
-   */
-  private async checkForegroundApp(): Promise<void> {
-    try {
-      if (Platform.OS !== 'android') return;
-
-      // 使用原生模組獲取前景應用程式資訊
-      const packageName = await FocusNativeModule.getForegroundApp();
-
-      if (packageName && this.isDistractingApp(packageName)) {
-        const appInfo = this.getAppInfo(packageName);
-        this.currentForegroundApp = {
-          ...appInfo,
-          isDistracting: true,
-          lastOpened: new Date(),
-        };
-
-        if (this.onDistractingAppDetected) {
-          this.onDistractingAppDetected(this.currentForegroundApp);
-        }
-      }
-    } catch (error) {
-      console.error('檢查前景應用程式失敗:', error);
+      // 顯示 overlay
+      overlayService.showOverlay({
+        message: `檢測到您正在使用 ${appInfo.appName}，請回到專注模式！`,
+        showReturnButton: true,
+      });
+    } else {
+      // 如果切回本 app，則隱藏 overlay
+      overlayService.hideOverlay();
     }
   }
 
@@ -188,8 +140,7 @@ class AppMonitorService {
    */
   private handleAppStateChange = (nextAppState: AppStateStatus): void => {
     if (nextAppState === 'active') {
-      // 應用程式回到前景時檢查
-      this.checkForegroundApp();
+      // 無需主動查詢，事件會自動推送
     }
   };
 
@@ -219,7 +170,6 @@ class AppMonitorService {
    */
   async checkAccessibilityService(): Promise<boolean> {
     if (Platform.OS !== 'android') return false;
-
     try {
       return await FocusNativeModule.isAccessibilityServiceEnabled();
     } catch (error) {

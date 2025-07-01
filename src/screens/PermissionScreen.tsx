@@ -56,14 +56,6 @@ const PermissionScreen: React.FC<PermissionScreenProps> = ({
     }
   };
 
-  const handleOpenUsageAccessSettings = () => {
-    permissionService.showPermissionExplanation(
-      '使用情況存取',
-      '需要此權限來監控您使用的應用程式，以便在您開啟干擾應用程式時提醒您。',
-      () => permissionService.openUsageAccessSettings(),
-    );
-  };
-
   const handleOpenOverlaySettings = () => {
     permissionService.showPermissionExplanation(
       '覆蓋其他應用程式',
@@ -86,7 +78,7 @@ const PermissionScreen: React.FC<PermissionScreenProps> = ({
 
         <View style={styles.permissionList}>
           {/* 使用情況存取權限 */}
-          <View style={styles.permissionItem}>
+          {/* <View style={styles.permissionItem}>
             <View style={styles.permissionHeader}>
               <Text style={styles.permissionTitle}>使用情況存取</Text>
               <View
@@ -111,7 +103,7 @@ const PermissionScreen: React.FC<PermissionScreenProps> = ({
                 <Text style={styles.buttonText}>開啟設定</Text>
               </TouchableOpacity>
             )}
-          </View>
+          </View> */}
 
           {/* 覆蓋權限 */}
           <View style={styles.permissionItem}>

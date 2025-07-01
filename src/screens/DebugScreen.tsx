@@ -10,7 +10,6 @@ import { permissionService } from '../services/PermissionService';
 import { appMonitorService } from '../services/AppMonitorService';
 import { overlayService } from '../services/OverlayService';
 import { pomodoroService } from '../services/PomodoroService';
-import { FocusNativeModule } from '../types/native';
 import { PermissionStatus } from '../types';
 
 const DebugScreen: React.FC = () => {
@@ -18,9 +17,9 @@ const DebugScreen: React.FC = () => {
     usageAccess: false,
     overlayPermission: false,
     notificationPermission: false,
+    accessibilityService: false,
   });
   const [logs, setLogs] = useState<string[]>([]);
-  const [foregroundApp, setForegroundApp] = useState<string>('');
 
   const addLog = (message: string) => {
     const timestamp = new Date().toLocaleTimeString();
@@ -82,39 +81,6 @@ const DebugScreen: React.FC = () => {
     addLog('工作會話已開始');
   };
 
-  const testNativeOverlay = async () => {
-    addLog('測試原生浮動視窗...');
-    try {
-      FocusNativeModule.showOverlay('這是原生浮動視窗測試');
-      addLog('原生浮動視窗已顯示');
-    } catch (error) {
-      addLog(`原生浮動視窗測試失敗: ${error}`);
-    }
-  };
-
-  const testNativeForegroundApp = async () => {
-    addLog('測試原生前景應用程式查詢...');
-    try {
-      const packageName = await FocusNativeModule.getForegroundApp();
-      setForegroundApp(packageName || '無');
-      addLog(`前景應用程式: ${packageName || '無'}`);
-    } catch (error) {
-      addLog(`前景應用程式查詢失敗: ${error}`);
-    }
-  };
-
-  const testNativePermissions = async () => {
-    addLog('測試原生權限檢查...');
-    try {
-      const overlayGranted = await FocusNativeModule.canDrawOverlays();
-      const usageGranted = await FocusNativeModule.hasUsageAccess();
-      addLog(`覆蓋權限: ${overlayGranted}`);
-      addLog(`使用情況存取權限: ${usageGranted}`);
-    } catch (error) {
-      addLog(`原生權限檢查失敗: ${error}`);
-    }
-  };
-
   const clearLogs = () => {
     setLogs([]);
   };
@@ -138,14 +104,12 @@ const DebugScreen: React.FC = () => {
               通知權限: {permissions.notificationPermission ? '✅' : '❌'}
             </Text>
           </View>
-        </View>
-
-        {/* 前景應用程式 */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>前景應用程式</Text>
-          <Text style={styles.foregroundAppText}>
-            目前前景 App: {foregroundApp || '未查詢'}
-          </Text>
+          <View style={styles.permissionItem}>
+            <Text>
+              Accessibility Service:{' '}
+              {permissions.accessibilityService ? '✅' : '❌'}
+            </Text>
+          </View>
         </View>
 
         {/* 測試按鈕 */}
@@ -170,29 +134,6 @@ const DebugScreen: React.FC = () => {
 
           <TouchableOpacity style={styles.button} onPress={startWorkSession}>
             <Text style={styles.buttonText}>開始工作會話</Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* 原生模組測試 */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>原生模組測試</Text>
-
-          <TouchableOpacity
-            style={styles.button}
-            onPress={testNativePermissions}
-          >
-            <Text style={styles.buttonText}>測試原生權限檢查</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.button} onPress={testNativeOverlay}>
-            <Text style={styles.buttonText}>測試原生浮動視窗</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.button}
-            onPress={testNativeForegroundApp}
-          >
-            <Text style={styles.buttonText}>測試原生前景應用程式查詢</Text>
           </TouchableOpacity>
         </View>
 
@@ -254,11 +195,6 @@ const styles = StyleSheet.create({
   },
   permissionItem: {
     paddingVertical: 8,
-  },
-  foregroundAppText: {
-    fontSize: 14,
-    color: '#666',
-    fontFamily: 'monospace',
   },
   button: {
     backgroundColor: '#2196F3',

@@ -67,7 +67,11 @@ class NotificationService {
       const notification: NotificationData = {
         title: remoteMessage.notification?.title || '專注提醒',
         body: remoteMessage.notification?.body || '',
-        type: this.parseNotificationType(remoteMessage.data?.type),
+        type: this.parseNotificationType(
+          typeof remoteMessage.data?.type === 'string'
+            ? remoteMessage.data.type
+            : undefined,
+        ),
         data: remoteMessage.data,
       };
 
@@ -87,7 +91,11 @@ class NotificationService {
       const notification: NotificationData = {
         title: remoteMessage.notification?.title || '專注提醒',
         body: remoteMessage.notification?.body || '',
-        type: this.parseNotificationType(remoteMessage.data?.type),
+        type: this.parseNotificationType(
+          typeof remoteMessage.data?.type === 'string'
+            ? remoteMessage.data.type
+            : undefined,
+        ),
         data: remoteMessage.data,
       };
 
@@ -106,7 +114,11 @@ class NotificationService {
       const notification: NotificationData = {
         title: remoteMessage.notification?.title || '專注提醒',
         body: remoteMessage.notification?.body || '',
-        type: this.parseNotificationType(remoteMessage.data?.type),
+        type: this.parseNotificationType(
+          typeof remoteMessage.data?.type === 'string'
+            ? remoteMessage.data.type
+            : undefined,
+        ),
         data: remoteMessage.data,
       };
 
@@ -125,7 +137,11 @@ class NotificationService {
           const notification: NotificationData = {
             title: remoteMessage.notification?.title || '專注提醒',
             body: remoteMessage.notification?.body || '',
-            type: this.parseNotificationType(remoteMessage.data?.type),
+            type: this.parseNotificationType(
+              typeof remoteMessage.data?.type === 'string'
+                ? remoteMessage.data.type
+                : undefined,
+            ),
             data: remoteMessage.data,
           };
 

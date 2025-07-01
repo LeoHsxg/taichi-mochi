@@ -9,38 +9,22 @@ class PermissionService {
   async checkAllPermissions(): Promise<PermissionStatus> {
     console.log('開始檢查權限...');
 
-    const [usageAccess, overlayPermission, notificationPermission] =
+    const [overlayPermission, notificationPermission, accessibilityService] =
       await Promise.all([
-        this.checkUsageAccessPermission(),
         this.checkOverlayPermission(),
         this.checkNotificationPermission(),
+        this.checkAccessibilityService(),
       ]);
 
     const result = {
-      usageAccess,
+      usageAccess: true,
       overlayPermission,
       notificationPermission,
+      accessibilityService,
     };
 
     console.log('權限檢查結果:', result);
     return result;
-  }
-
-  /**
-   * 檢查使用情況存取權限
-   */
-  async checkUsageAccessPermission(): Promise<boolean> {
-    if (Platform.OS !== 'android') return true;
-
-    try {
-      // 使用原生模組檢查 PACKAGE_USAGE_STATS 權限
-      const hasPermission = await FocusNativeModule.hasUsageAccess();
-      console.log('使用情況存取權限檢查結果:', hasPermission);
-      return hasPermission;
-    } catch (error) {
-      console.error('檢查使用情況存取權限失敗:', error);
-      return false;
-    }
   }
 
   /**
@@ -104,21 +88,6 @@ class PermissionService {
   }
 
   /**
-   * 跳轉到使用情況存取設定頁面
-   */
-  async openUsageAccessSettings(): Promise<void> {
-    if (Platform.OS !== 'android') return;
-
-    try {
-      console.log('開啟使用情況存取設定頁面');
-      FocusNativeModule.openUsageAccessSettings();
-    } catch (error) {
-      console.error('開啟使用情況存取設定失敗:', error);
-      Alert.alert('錯誤', '無法開啟設定頁面');
-    }
-  }
-
-  /**
    * 跳轉到覆蓋權限設定頁面
    */
   async openOverlaySettings(): Promise<void> {
@@ -176,6 +145,14 @@ class PermissionService {
     console.log('通知權限請求結果:', notificationGranted);
 
     console.log('=== 權限測試結束 ===');
+  }
+
+  async checkAccessibilityService(): Promise<boolean> {
+    try {
+      return await FocusNativeModule.isAccessibilityServiceEnabled();
+    } catch (error) {
+      return false;
+    }
   }
 }
 

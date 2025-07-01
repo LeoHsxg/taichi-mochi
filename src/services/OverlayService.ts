@@ -14,16 +14,11 @@ class OverlayService {
       console.log('Overlay 僅支援 Android 平台');
       return;
     }
-
     this.currentConfig = config;
     this.isVisible = true;
-
     try {
-      // 使用原生模組顯示 Overlay
       FocusNativeModule.showOverlay(config.message);
       console.log('顯示 Overlay:', config);
-
-      // 如果設定自動隱藏，設定定時器
       if (config.autoHide && config.autoHideDelay) {
         setTimeout(() => {
           this.hideOverlay();
@@ -39,12 +34,9 @@ class OverlayService {
    */
   hideOverlay(): void {
     if (Platform.OS !== 'android') return;
-
     this.isVisible = false;
     this.currentConfig = undefined;
-
     try {
-      // 使用原生模組隱藏 Overlay
       FocusNativeModule.hideOverlay();
       console.log('隱藏 Overlay');
     } catch (error) {
