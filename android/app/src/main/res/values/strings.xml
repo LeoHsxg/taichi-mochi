@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">taichi_mochi</string>
+    <string name="accessibility_service_description">此服務用於監控前景應用程式狀態，以提供專注模式功能</string>
 </resources>

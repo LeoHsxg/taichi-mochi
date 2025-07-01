@@ -1,4 +1,10 @@
-import { AppState, AppStateStatus, Platform } from 'react-native';
+import {
+  AppState,
+  AppStateStatus,
+  Platform,
+  NativeEventEmitter,
+  NativeModules,
+} from 'react-native';
 import { AppInfo, DistractingApp } from '../types';
 import { FocusNativeModule } from '../types/native';
 
@@ -8,6 +14,7 @@ class AppMonitorService {
   private currentForegroundApp?: AppInfo;
   private distractingApps: DistractingApp[] = [];
   private onDistractingAppDetected?: (appInfo: AppInfo) => void;
+  private eventEmitter?: NativeEventEmitter;
 
   /**
    * 設定干擾應用程式清單
@@ -26,24 +33,35 @@ class AppMonitorService {
   /**
    * 開始監控
    */
-  startMonitoring(): void {
+  async startMonitoring(): Promise<void> {
     if (this.isMonitoring) return;
 
     this.isMonitoring = true;
 
-    // 啟動原生前景監控服務
     if (Platform.OS === 'android') {
       try {
-        FocusNativeModule.startForegroundMonitor();
-        console.log('原生前景監控服務已啟動');
+        // 優先使用 AccessibilityService
+        const isAccessibilityEnabled =
+          await FocusNativeModule.isAccessibilityServiceEnabled();
+
+        if (isAccessibilityEnabled) {
+          // 使用 AccessibilityService 監控
+          FocusNativeModule.startAccessibilityMonitoring();
+          this.setupAccessibilityEventEmitter();
+          console.log('AccessibilityService 監控已啟動');
+        } else {
+          // 備用方案：使用前景服務
+          FocusNativeModule.startForegroundMonitor();
+          console.log('原生前景監控服務已啟動');
+
+          this.monitoringInterval = setInterval(() => {
+            this.checkForegroundApp();
+          }, 1000); // 每秒檢查一次
+        }
       } catch (error) {
-        console.error('啟動原生前景監控服務失敗:', error);
+        console.error('啟動監控服務失敗:', error);
       }
     }
-
-    this.monitoringInterval = setInterval(() => {
-      this.checkForegroundApp();
-    }, 1000); // 每秒檢查一次
 
     // 監聽應用程式狀態變化
     AppState.addEventListener('change', this.handleAppStateChange);
@@ -62,18 +80,59 @@ class AppMonitorService {
       this.monitoringInterval = undefined;
     }
 
-    // 停止原生前景監控服務
+    // 停止原生監控服務
     if (Platform.OS === 'android') {
       try {
         FocusNativeModule.stopForegroundMonitor();
-        console.log('原生前景監控服務已停止');
+        FocusNativeModule.stopAccessibilityMonitoring();
+        console.log('監控服務已停止');
       } catch (error) {
-        console.error('停止原生前景監控服務失敗:', error);
+        console.error('停止監控服務失敗:', error);
       }
+    }
+
+    // 清理事件監聽器
+    if (this.eventEmitter) {
+      this.eventEmitter.removeAllListeners('onForegroundAppChanged');
+      this.eventEmitter = undefined;
     }
 
     // AppState 在新版本中不需要手動移除監聽器
     // 監聽器會在組件卸載時自動清理
+  }
+
+  /**
+   * 設定 AccessibilityService 事件監聽器
+   */
+  private setupAccessibilityEventEmitter(): void {
+    if (Platform.OS !== 'android') return;
+
+    this.eventEmitter = new NativeEventEmitter(NativeModules.FocusNativeModule);
+    this.eventEmitter.addListener(
+      'onForegroundAppChanged',
+      (packageName: string) => {
+        console.log('前景應用程式變更:', packageName);
+        this.handleForegroundAppChange(packageName);
+      },
+    );
+  }
+
+  /**
+   * 處理前景應用程式變更事件
+   */
+  private handleForegroundAppChange(packageName: string): void {
+    if (this.isDistractingApp(packageName)) {
+      const appInfo = this.getAppInfo(packageName);
+      this.currentForegroundApp = {
+        ...appInfo,
+        isDistracting: true,
+        lastOpened: new Date(),
+      };
+
+      if (this.onDistractingAppDetected) {
+        this.onDistractingAppDetected(this.currentForegroundApp);
+      }
+    }
   }
 
   /**
@@ -153,6 +212,29 @@ class AppMonitorService {
    */
   getDistractingApps(): DistractingApp[] {
     return [...this.distractingApps];
+  }
+
+  /**
+   * 檢查無障礙服務是否啟用
+   */
+  async checkAccessibilityService(): Promise<boolean> {
+    if (Platform.OS !== 'android') return false;
+
+    try {
+      return await FocusNativeModule.isAccessibilityServiceEnabled();
+    } catch (error) {
+      console.error('檢查無障礙服務狀態失敗:', error);
+      return false;
+    }
+  }
+
+  /**
+   * 跳轉到無障礙服務設定頁
+   */
+  openAccessibilitySettings(): void {
+    if (Platform.OS === 'android') {
+      FocusNativeModule.openAccessibilitySettings();
+    }
   }
 }
 

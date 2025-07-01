@@ -7,6 +7,7 @@ interface FocusNativeModuleInterface {
 
   // 設定跳轉
   openUsageAccessSettings(): void;
+  openAccessibilitySettings(): void;
 
   // 浮動視窗控制
   showOverlay(message: string): void;
@@ -15,6 +16,11 @@ interface FocusNativeModuleInterface {
   // 前景監控服務
   startForegroundMonitor(): void;
   stopForegroundMonitor(): void;
+
+  // 無障礙服務
+  isAccessibilityServiceEnabled(): Promise<boolean>;
+  startAccessibilityMonitoring(): void;
+  stopAccessibilityMonitoring(): void;
 
   // 前景應用程式查詢
   getForegroundApp(): Promise<string | null>;

@@ -7,6 +7,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { permissionService } from '../services/PermissionService';
+import { appMonitorService } from '../services/AppMonitorService';
 import { PermissionStatus } from '../types';
 
 interface PermissionScreenProps {
@@ -20,6 +21,7 @@ const PermissionScreen: React.FC<PermissionScreenProps> = ({
     usageAccess: false,
     overlayPermission: false,
     notificationPermission: false,
+    accessibilityService: false,
   });
 
   useEffect(() => {
@@ -30,7 +32,8 @@ const PermissionScreen: React.FC<PermissionScreenProps> = ({
     if (
       permissions.usageAccess &&
       permissions.overlayPermission &&
-      permissions.notificationPermission
+      permissions.notificationPermission &&
+      permissions.accessibilityService
     ) {
       onPermissionsGranted();
     }
@@ -38,7 +41,12 @@ const PermissionScreen: React.FC<PermissionScreenProps> = ({
 
   const checkPermissions = async () => {
     const currentPermissions = await permissionService.checkAllPermissions();
-    setPermissions(currentPermissions);
+    const accessibilityEnabled =
+      await appMonitorService.checkAccessibilityService();
+    setPermissions({
+      ...currentPermissions,
+      accessibilityService: accessibilityEnabled,
+    });
   };
 
   const handleRequestNotificationPermission = async () => {
@@ -161,6 +169,36 @@ const PermissionScreen: React.FC<PermissionScreenProps> = ({
                 onPress={handleRequestNotificationPermission}
               >
                 <Text style={styles.buttonText}>請求權限</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+
+          {/* 無障礙服務權限 */}
+          <View style={styles.permissionItem}>
+            <View style={styles.permissionHeader}>
+              <Text style={styles.permissionTitle}>無障礙服務</Text>
+              <View
+                style={[
+                  styles.statusIndicator,
+                  permissions.accessibilityService
+                    ? styles.granted
+                    : styles.denied,
+                ]}
+              >
+                <Text style={styles.statusText}>
+                  {permissions.accessibilityService ? '已啟用' : '未啟用'}
+                </Text>
+              </View>
+            </View>
+            <Text style={styles.permissionDescription}>
+              監控前景應用程式狀態，提供即時的專注提醒功能
+            </Text>
+            {!permissions.accessibilityService && (
+              <TouchableOpacity
+                style={styles.permissionButton}
+                onPress={() => appMonitorService.openAccessibilitySettings()}
+              >
+                <Text style={styles.buttonText}>開啟設定</Text>
               </TouchableOpacity>
             )}
           </View>

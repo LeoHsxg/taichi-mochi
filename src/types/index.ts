@@ -3,6 +3,7 @@ export interface PermissionStatus {
   usageAccess: boolean;
   overlayPermission: boolean;
   notificationPermission: boolean;
+  accessibilityService: boolean;
 }
 
 // 應用程式監控相關類型
