@@ -41,6 +41,19 @@
         android:enabled="true"
         android:exported="false"
         android:foregroundServiceType="systemExempted" />
+
+      <service
+          android:name=".OverlayService"
+          android:exported="false"
+          android:enabled="true"
+          android:permission="android.permission.SYSTEM_ALERT_WINDOW">
+          <!-- 如果你想用 action 來啟動也可以加這個 intent-filter -->
+          <!--
+          <intent-filter>
+              <action android:name="your.package.name.ACTION_START_OVERLAY"/>
+          </intent-filter>
+          -->
+      </service>
       
       <activity
         android:name=".MainActivity"

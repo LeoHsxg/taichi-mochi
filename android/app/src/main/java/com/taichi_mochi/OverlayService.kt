@@ -8,6 +8,7 @@ import android.view.*
 import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.TextView
+import android.util.Log
 
 class OverlayService : Service() {
     private var windowManager: WindowManager? = null
@@ -18,26 +19,50 @@ class OverlayService : Service() {
     override fun onCreate() {
         super.onCreate()
         windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
+        Log.d("OverlayService", "Service created")
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        if (overlayView != null) return START_STICKY
+        Log.d("OverlayService", "onStartCommand called")
+        
+        if (overlayView != null) {
+            Log.d("OverlayService", "Overlay already exists, returning")
+            return START_STICKY
+        }
 
-        val message = intent?.getStringExtra("message") ?: "這是浮動視窗"
+        val message = intent?.getStringExtra("message") ?: "專注時間到！"
+        
+        // 創建全螢幕白色背景的佈局
         val layout = LinearLayout(this)
         layout.orientation = LinearLayout.VERTICAL
-        layout.setBackgroundColor(0xEEFFFFFF.toInt())
-        layout.setPadding(40, 40, 40, 40)
+        layout.setBackgroundColor(0xFFFFFFFF.toInt()) // 純白色背景
+        layout.gravity = Gravity.CENTER
+        
+        // 添加標題文字
+        val titleView = TextView(this)
+        titleView.text = "專注提醒"
+        titleView.textSize = 32f
+        titleView.setTextColor(0xFF333333.toInt())
+        titleView.gravity = Gravity.CENTER
+        titleView.setPadding(0, 0, 0, 40)
+        layout.addView(titleView)
+        
+        // 添加訊息文字
+        val messageView = TextView(this)
+        messageView.text = message
+        messageView.textSize = 20f
+        messageView.setTextColor(0xFF666666.toInt())
+        messageView.gravity = Gravity.CENTER
+        messageView.setPadding(0, 0, 0, 60)
+        layout.addView(messageView)
 
-        val textView = TextView(this)
-        textView.text = message
-        textView.textSize = 18f
-        textView.setTextColor(0xFF333333.toInt())
-        layout.addView(textView)
-
+        // 添加跳轉按鈕
         val button = Button(this)
-        button.text = "回到 mochi"
+        button.text = "回到 Mochi App"
+        button.textSize = 18f
+        button.setPadding(60, 20, 60, 20)
         button.setOnClickListener {
+            Log.d("OverlayService", "Button clicked, launching app")
             val launchIntent = packageManager.getLaunchIntentForPackage(packageName)
             launchIntent?.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             startActivity(launchIntent)
@@ -45,27 +70,42 @@ class OverlayService : Service() {
         }
         layout.addView(button)
 
+        // 設定全螢幕視窗參數
         val params = WindowManager.LayoutParams(
-            WindowManager.LayoutParams.WRAP_CONTENT,
-            WindowManager.LayoutParams.WRAP_CONTENT,
+            WindowManager.LayoutParams.MATCH_PARENT, // 全螢幕寬度
+            WindowManager.LayoutParams.MATCH_PARENT, // 全螢幕高度
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O)
                 WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
             else
                 WindowManager.LayoutParams.TYPE_PHONE,
-            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
+            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or 
+            WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or
+            WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
             PixelFormat.TRANSLUCENT
         )
-        params.gravity = Gravity.CENTER
+        params.gravity = Gravity.TOP or Gravity.LEFT
 
         overlayView = layout
-        windowManager?.addView(overlayView, params)
+        try {
+            windowManager?.addView(overlayView, params)
+            Log.d("OverlayService", "Overlay view added successfully")
+        } catch (e: Exception) {
+            Log.e("OverlayService", "Failed to add overlay view", e)
+        }
+        
         return START_STICKY
     }
 
     override fun onDestroy() {
         super.onDestroy()
+        Log.d("OverlayService", "Service destroying")
         if (overlayView != null) {
-            windowManager?.removeView(overlayView)
+            try {
+                windowManager?.removeView(overlayView)
+                Log.d("OverlayService", "Overlay view removed")
+            } catch (e: Exception) {
+                Log.e("OverlayService", "Failed to remove overlay view", e)
+            }
             overlayView = null
         }
     }
