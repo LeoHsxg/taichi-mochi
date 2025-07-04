@@ -11,30 +11,35 @@ import {
   StyleSheet,
   useColorScheme,
   View,
-  Alert,
   TouchableOpacity,
   Text,
 } from 'react-native';
 import PermissionScreen from './src/screens/PermissionScreen';
 import PomodoroScreen from './src/screens/PomodoroScreen';
 import DebugScreen from './src/screens/DebugScreen';
+import FCMTestScreen from './src/screens/FCMTestScreen';
 import { permissionService } from './src/services/PermissionService';
 import { appMonitorService } from './src/services/AppMonitorService';
 import { overlayService } from './src/services/OverlayService';
 import { pomodoroService } from './src/services/PomodoroService';
 import { notificationService } from './src/services/NotificationService';
-import { PermissionStatus, DistractingApp } from './src/types';
+import FCMService from './src/services/FCMService';
+import { DistractingApp } from './src/types';
 
 function App() {
   const isDarkMode = useColorScheme() === 'dark';
   const [permissionsGranted, setPermissionsGranted] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
   const [currentScreen, setCurrentScreen] = useState<
-    'permission' | 'main' | 'debug'
+    'permission' | 'main' | 'debug' | 'fcm'
   >('permission');
 
   const initializeServices = useCallback(async () => {
     try {
+      // 初始化 FCM 服務
+      const fcmService = FCMService.getInstance();
+      await fcmService.initialize();
+
       // 初始化通知服務
       await notificationService.initialize();
 
@@ -149,18 +154,6 @@ function App() {
     setCurrentScreen('main');
   };
 
-  const handleStartMonitoring = () => {
-    if (permissionsGranted) {
-      appMonitorService.startMonitoring();
-      Alert.alert('監控已啟動', '應用程式監控功能已開始運作');
-    }
-  };
-
-  const handleStopMonitoring = () => {
-    appMonitorService.stopMonitoring();
-    Alert.alert('監控已停止', '應用程式監控功能已停止');
-  };
-
   const renderScreen = () => {
     if (!isInitialized) {
       return (
@@ -173,6 +166,10 @@ function App() {
 
     if (currentScreen === 'debug') {
       return <DebugScreen />;
+    }
+
+    if (currentScreen === 'fcm') {
+      return <FCMTestScreen />;
     }
 
     if (!permissionsGranted) {
@@ -219,6 +216,22 @@ function App() {
             ]}
           >
             調試
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[
+            styles.navButton,
+            currentScreen === 'fcm' && styles.activeNavButton,
+          ]}
+          onPress={() => setCurrentScreen('fcm')}
+        >
+          <Text
+            style={[
+              styles.navButtonText,
+              currentScreen === 'fcm' && styles.activeNavButtonText,
+            ]}
+          >
+            FCM 測試
           </Text>
         </TouchableOpacity>
       </View>
