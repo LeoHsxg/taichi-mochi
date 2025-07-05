@@ -66,10 +66,38 @@ class FocusNativeModule(reactContext: ReactApplicationContext) : ReactContextBas
         promise.resolve(result)
     }
 
-    // 顯示浮動視窗
+    // 保留原有接口，行為同 selfdeclaration
     @ReactMethod
     fun showOverlay(message: String) {
         val intent = Intent(reactApplicationContext, OverlayService::class.java)
+        intent.putExtra("type", "type1") // selfdeclaration
+        intent.putExtra("message", message)
+        reactApplicationContext.startService(intent)
+    }
+
+    // 新增：自我宣告 overlay
+    @ReactMethod
+    fun showSelfDeclarationOverlay(message: String) {
+        val intent = Intent(reactApplicationContext, OverlayService::class.java)
+        intent.putExtra("type", "type1")
+        intent.putExtra("message", message)
+        reactApplicationContext.startService(intent)
+    }
+
+    // 新增：循環 GIF overlay
+    @ReactMethod
+    fun showGifLoopingOverlay(gifUrl: String) {
+        val intent = Intent(reactApplicationContext, OverlayService::class.java)
+        intent.putExtra("type", "type2")
+        intent.putExtra("gifUrl", gifUrl)
+        reactApplicationContext.startService(intent)
+    }
+
+    // 新增：強制阻擋 overlay
+    @ReactMethod
+    fun showForcedBlockingOverlay(message: String) {
+        val intent = Intent(reactApplicationContext, OverlayService::class.java)
+        intent.putExtra("type", "type3")
         intent.putExtra("message", message)
         reactApplicationContext.startService(intent)
     }

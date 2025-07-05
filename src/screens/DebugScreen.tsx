@@ -11,6 +11,7 @@ import { appMonitorService } from '../services/AppMonitorService';
 import { overlayService } from '../services/OverlayService';
 import { pomodoroService } from '../services/PomodoroService';
 import { PermissionStatus } from '../types';
+import { FocusNativeModule } from '../types/native';
 
 const DebugScreen: React.FC = () => {
   const [permissions, setPermissions] = useState<PermissionStatus>({
@@ -48,6 +49,30 @@ const DebugScreen: React.FC = () => {
       autoHideDelay: 5000,
     });
     addLog('浮動視窗已顯示');
+  };
+
+  const testSelfDeclarationOverlay = () => {
+    addLog('測試自我宣告 Overlay...');
+    FocusNativeModule.showSelfDeclarationOverlay(
+      '這是一個自我宣告的測試彈窗，按鈕只會關閉 overlay',
+    );
+    addLog('自我宣告 Overlay 已顯示');
+  };
+
+  const testGifLoopingOverlay = () => {
+    addLog('測試循環 GIF Overlay...');
+    FocusNativeModule.showGifLoopingOverlay(
+      'https://media.giphy.com/media/3oEjI6SIIHBdRxXI40/giphy.gif',
+    );
+    addLog('循環 GIF Overlay 已顯示');
+  };
+
+  const testForcedBlockingOverlay = () => {
+    addLog('測試強制阻擋 Overlay...');
+    FocusNativeModule.showForcedBlockingOverlay(
+      '這是一個強制阻擋的測試彈窗，按鈕會導回 Mochi App',
+    );
+    addLog('強制阻擋 Overlay 已顯示');
   };
 
   const testAppMonitor = () => {
@@ -122,6 +147,27 @@ const DebugScreen: React.FC = () => {
 
           <TouchableOpacity style={styles.button} onPress={testOverlay}>
             <Text style={styles.buttonText}>測試浮動視窗</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.button}
+            onPress={testSelfDeclarationOverlay}
+          >
+            <Text style={styles.buttonText}>測試自我宣告 Overlay</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.button}
+            onPress={testGifLoopingOverlay}
+          >
+            <Text style={styles.buttonText}>測試循環 GIF Overlay</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.button}
+            onPress={testForcedBlockingOverlay}
+          >
+            <Text style={styles.buttonText}>測試強制阻擋 Overlay</Text>
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.button} onPress={testAppMonitor}>

@@ -1,0 +1,23 @@
+越少程式碼越好：告訴Cursor “the fewer lines of code, the better”，它就會寫出簡潔有力的程式碼。
+像資深開發者那樣：使用 “proceed like a senior developer” 或 “proceed like a 10x engineer”，讓AI模仿頂尖開發者的思維。
+堅持到底：加上 “do not stop working until you’ve implemented this feature fully and completely”，避免AI半途而廢。
+理性分析：遇到錯誤時，讓AI先寫3段分析段落，避免過早下結論。
+簡潔回答：加上 “answer in short” 可以獲得簡潔的回答，節省時間。
+保留註解：記得說 “do not delete comments”，保留重要的程式碼註解。
+總結當前狀態：使用 “summary of current state” 提示，幫助AI理解目前的開發進度。
+
+創建do.cursor規則文件
+database_setup.md：描述資料庫結構、表格、欄位等
+design_principles.md：UI/UX設計原則
+roadmap.md：專案發展路線圖
+
+My Cursor Workflow
+This workflow outlines how to create webapp using Claude or ChatGPT, along with PRD or MD instructions.
+Design Interfaces: Create all the interfaces using v0 (page creation).
+Set Up Replit: Initialize a Replit environment using Next.js, as it’s compatible with v0.
+Access Replit: Open Replit using SSH in Cursor.
+Work in Cursor: Begin implementing the pages created in v0. My approach is to prompt the composer with: "Create a page with the same UI/display using this code: <paste v0 code here>."
+Connect Pages: After creating all the pages, instruct the composer to connect them: "Redirect users to the homepage after successful login; otherwise, redirect to the unsuccessful login page."
+Run Code: Test your code on Replit by running it.
+Why Replit?: I prefer using Replit because it allows my web app to run on a Replit domain, making it easy to share prior to deployment.
+I hope this inspires others! I'm also open to suggestions.
