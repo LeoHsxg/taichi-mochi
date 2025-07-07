@@ -5,6 +5,7 @@ import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.drawable.GradientDrawable
 import android.view.Gravity
+import android.view.View
 import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.TextView
@@ -16,119 +17,176 @@ class OverlaySelfDeclaration(
     onButtonClick: (() -> Unit)? = null
 ) : LinearLayout(context) {
     private var isButtonClicked = false
+    private var isButtonLongPressed = false
     private lateinit var actionButton: Button
 
-    // 固定顯示內容
+    // 固定資料
     private val stats1 = "7 voluntary stops after initial reminder"
     private val stats2 = "2 system-enforced stops"
     private val encouragement = message
     private val buttonText = "I got this! Staying on track today 💪"
 
     init {
+        // 外層 full-screen overlay
         layoutParams = LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT)
         orientation = VERTICAL
-        setBackgroundColor(Color.parseColor("#444444"))
+        setBackgroundColor(Color.parseColor("#333333"))  // 深灰遮罩
         gravity = Gravity.CENTER
 
-        // Card container
-        val card = LinearLayout(context)
-        card.orientation = VERTICAL
-        card.gravity = Gravity.CENTER
-        card.setPadding(40)
-        val cardParams = LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT)
-        cardParams.setMargins(60, 120, 60, 120)
-        card.layoutParams = cardParams
-        val cardBg = GradientDrawable()
-        cardBg.cornerRadius = 40f
-        cardBg.setColor(Color.parseColor("#444444"))
-        cardBg.setStroke(0, Color.TRANSPARENT)
-        card.background = cardBg
-        card.elevation = 16f
+        // Card 容器
+        val card = LinearLayout(context).apply {
+            orientation = VERTICAL
+            gravity = Gravity.TOP or Gravity.CENTER_HORIZONTAL
+            // 內距
+            val pad = (24 * resources.displayMetrics.density).toInt()
+            setPadding(pad)
+            // 卡片背景
+            background = GradientDrawable().also {
+                it.cornerRadius = 32f * resources.displayMetrics.density
+                it.setColor(Color.parseColor("#505050"))
+            }
+            elevation = 8f * resources.displayMetrics.density
+            // 外距
+            layoutParams = LayoutParams(
+                LayoutParams.MATCH_PARENT,
+                LayoutParams.WRAP_CONTENT
+            ).also { lp ->
+                val mar = (32 * resources.displayMetrics.density).toInt()
+                lp.setMargins(mar, mar * 2, mar, mar * 2)
+            }
+        }
 
-        // 標題與說明
-        val titleRow = LinearLayout(context)
-        titleRow.orientation = HORIZONTAL
-        titleRow.gravity = Gravity.CENTER_VERTICAL
-        val title = TextView(context)
-        title.text = "Hi, Matt."
-        title.textSize = 20f
-        title.setTextColor(Color.parseColor("#FF2D6A"))
-        title.setPadding(0, 0, 10, 0)
-        title.paint.isFakeBoldText = true
-        val desc = TextView(context)
-        desc.text = "Here's your yesterday's stats:"
-        desc.textSize = 16f
-        desc.setTextColor(Color.parseColor("#EEEEEE"))
-        titleRow.addView(title)
-        titleRow.addView(desc)
+        // 1. 標題列
+        val titleRow = LinearLayout(context).apply {
+            orientation = HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            layoutParams = LayoutParams(
+                LayoutParams.WRAP_CONTENT,
+                LayoutParams.WRAP_CONTENT
+            ).also { it.bottomMargin = (8 * resources.displayMetrics.density).toInt() }
+        }
+        titleRow.addView(TextView(context).apply {
+            text = "Hi, Matt."
+            textSize = 20f
+            setTextColor(Color.parseColor("#FF2D6A"))       // Figma 粉
+            paint.isFakeBoldText = true
+        })
+        titleRow.addView(TextView(context).apply {
+            text = "Here's your yesterday's stats:"
+            textSize = 16f
+            setTextColor(Color.parseColor("#EEEEEE"))
+            setPadding((6 * resources.displayMetrics.density).toInt(), 0, 0, 0)
+        })
         card.addView(titleRow)
 
-        // 第一行統計
-        val stat1Row = LinearLayout(context)
-        stat1Row.orientation = HORIZONTAL
-        stat1Row.gravity = Gravity.CENTER_VERTICAL
-        stat1Row.setPadding(0, 30, 0, 0)
-        val stat1Bg = GradientDrawable()
-        stat1Bg.cornerRadius = 16f
-        stat1Bg.setColor(Color.parseColor("#E6005A7A"))
-        val stat1 = TextView(context)
-        stat1.text = "✔ $stats1"
-        stat1.textSize = 16f
-        stat1.setTextColor(Color.WHITE)
-        stat1.setPadding(24, 8, 24, 8)
-        stat1.background = stat1Bg
-        stat1Row.addView(stat1)
+        // 2. 第一行統計
+        val stat1Row = LinearLayout(context).apply {
+            orientation = HORIZONTAL
+            layoutParams = LayoutParams(
+                LayoutParams.WRAP_CONTENT,
+                LayoutParams.WRAP_CONTENT
+            ).also { it.topMargin = (12 * resources.displayMetrics.density).toInt() }
+        }
+        stat1Row.addView(TextView(context).apply {
+            text = "✔ $stats1"
+            textSize = 16f
+            setTextColor(Color.WHITE)
+            val bg = GradientDrawable().also {
+                it.cornerRadius = 12f * resources.displayMetrics.density
+                it.setColor(Color.parseColor("#E6005A"))   // 純粉底
+            }
+            background = bg
+            setPadding(
+                (16 * resources.displayMetrics.density).toInt(),
+                (8 * resources.displayMetrics.density).toInt(),
+                (16 * resources.displayMetrics.density).toInt(),
+                (8 * resources.displayMetrics.density).toInt()
+            )
+        })
         card.addView(stat1Row)
 
-        // 第二行統計
-        val stat2Row = LinearLayout(context)
-        stat2Row.orientation = HORIZONTAL
-        stat2Row.gravity = Gravity.CENTER_VERTICAL
-        stat2Row.setPadding(0, 18, 0, 0)
-        val stat2 = TextView(context)
-        stat2.text = "✔ $stats2"
-        stat2.textSize = 16f
-        stat2.setTextColor(Color.WHITE)
-        stat2.paintFlags = stat2.paintFlags or Paint.STRIKE_THRU_TEXT_FLAG
-        stat2Row.addView(stat2)
-        // angry face icon
-        val angry = TextView(context)
-        angry.text = "\uD83D\uDE20" // 😠
-        angry.textSize = 20f
-        angry.setPadding(16, 0, 0, 0)
-        stat2Row.addView(angry)
+        // 3. 第二行統計
+        val stat2Row = LinearLayout(context).apply {
+            orientation = HORIZONTAL
+            layoutParams = LayoutParams(
+                LayoutParams.WRAP_CONTENT,
+                LayoutParams.WRAP_CONTENT
+            ).also { it.topMargin = (8 * resources.displayMetrics.density).toInt() }
+        }
+        stat2Row.addView(TextView(context).apply {
+            text = "✔ $stats2"
+            textSize = 16f
+            setTextColor(Color.WHITE)
+            paintFlags = paintFlags or Paint.STRIKE_THRU_TEXT_FLAG
+        })
+        stat2Row.addView(TextView(context).apply {
+            text = "\uD83D\uDE20"  // 😠
+            textSize = 20f
+            setPadding((8 * resources.displayMetrics.density).toInt(), 0, 0, 0)
+        })
         card.addView(stat2Row)
 
-        // 鼓勵語
-        val encouragementView = TextView(context)
-        encouragementView.text = encouragement
-        encouragementView.textSize = 15f
-        encouragementView.setTextColor(Color.parseColor("#EEEEEE"))
-        encouragementView.gravity = Gravity.CENTER
-        encouragementView.setPadding(0, 28, 0, 28)
-        card.addView(encouragementView)
-
-        // 按鈕
-        actionButton = Button(context)
-        actionButton.text = buttonText
-        actionButton.textSize = 15f
-        actionButton.setTextColor(Color.WHITE)
-        actionButton.setPadding(32, 12, 32, 12)
-        val btnBg = GradientDrawable()
-        btnBg.cornerRadius = 24f
-        btnBg.setColor(Color.parseColor("#888888"))
-        actionButton.background = btnBg
-        actionButton.setOnClickListener {
-            if (!isButtonClicked) {
-                isButtonClicked = true
-                btnBg.setColor(Color.parseColor("#B2C94B")) // 綠色
-                actionButton.setTextColor(Color.parseColor("#444444"))
-                actionButton.invalidate()
+        // 4. 鼓勵語
+        card.addView(TextView(context).apply {
+            text = encouragement
+            textSize = 15f
+            setTextColor(Color.parseColor("#DDDDDD"))
+            gravity = Gravity.CENTER
+            layoutParams = LayoutParams(
+                LayoutParams.MATCH_PARENT,
+                LayoutParams.WRAP_CONTENT
+            ).also {
+                it.topMargin = (16 * resources.displayMetrics.density).toInt()
+                it.bottomMargin = (16 * resources.displayMetrics.density).toInt()
             }
-            onButtonClick?.invoke()
+        })
+
+        // 5. 按鈕
+        actionButton = Button(context).apply {
+            text = buttonText
+            textSize = 15f
+            setTextColor(Color.WHITE)
+            // 預設灰底
+            val btnBg = GradientDrawable().also {
+                it.cornerRadius = 24f * resources.displayMetrics.density
+                it.setColor(Color.parseColor("#888888"))
+            }
+            background = btnBg
+            val ph = (12 * resources.displayMetrics.density).toInt()
+            val pw = (24 * resources.displayMetrics.density).toInt()
+            setPadding(pw, ph, pw, ph)
+
+            // 普通點擊：只觸發 callback，不動顏色
+            setOnClickListener {
+                onButtonClick?.invoke()
+            }
+            // 長按：換綠底＋綠框
+            setOnLongClickListener {
+                if (!isButtonLongPressed) {
+                    isButtonLongPressed = true
+                    // 綠底
+                    btnBg.setColor(Color.parseColor("#B2C94B"))
+                    // 2dp 綠色邊框
+                    val stroke = (2 * resources.displayMetrics.density).toInt()
+                    btnBg.setStroke(stroke, Color.parseColor("#B2C94B"))
+                    // 文字深灰
+                    setTextColor(Color.parseColor("#333333"))
+                    background = btnBg
+                }
+                onButtonClick?.invoke()
+                true
+            }
+
+            layoutParams = LayoutParams(
+                LayoutParams.MATCH_PARENT,
+                LayoutParams.WRAP_CONTENT
+            ).also {
+                it.topMargin = (16 * resources.displayMetrics.density).toInt()
+            }
         }
         card.addView(actionButton)
 
+        // 將卡片加回 overlay
         addView(card)
     }
-} 
+}
