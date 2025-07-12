@@ -45,8 +45,14 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
         val gifUrl = remoteMessage.data["gif_url"]
         
         if (showOverlay) {
-            // 啟動 overlay 服務
-            startOverlayService(overlayType, overlayMessage, gifUrl)
+            // 優先使用前景服務來啟動 overlay
+            if (ForegroundMonitorService.isRunning()) {
+                Log.d("FCM", "前景服務正在運行，透過前景服務啟動 overlay")
+                startOverlayViaForegroundService(overlayType, overlayMessage, gifUrl)
+            } else {
+                Log.d("FCM", "前景服務未運行，直接啟動 overlay 服務")
+                startOverlayService(overlayType, overlayMessage, gifUrl)
+            }
         }
         
         // 處理收到的訊息 - 仍然發送通知作為備用
@@ -59,6 +65,34 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
             val title = remoteMessage.data["title"] ?: "新訊息"
             val body = remoteMessage.data["body"] ?: "您有新的通知"
             sendNotification(title, body)
+        }
+    }
+
+    /**
+     * 透過前景服務啟動 Overlay
+     */
+    private fun startOverlayViaForegroundService(type: String, message: String, gifUrl: String? = null) {
+        try {
+            val foregroundService = ForegroundMonitorService.getInstance()
+            if (foregroundService != null) {
+                val intent = Intent().apply {
+                    putExtra("show_overlay", true)
+                    putExtra("overlay_type", type)
+                    putExtra("overlay_message", message)
+                    if (gifUrl != null) {
+                        putExtra("gif_url", gifUrl)
+                    }
+                }
+                foregroundService.handleIntent(intent)
+                Log.d("FCM", "透過前景服務啟動 overlay 成功")
+            } else {
+                Log.w("FCM", "前景服務實例為空，回退到直接啟動")
+                startOverlayService(type, message, gifUrl)
+            }
+        } catch (e: Exception) {
+            Log.e("FCM", "透過前景服務啟動 overlay 失敗", e)
+            // 回退到直接啟動
+            startOverlayService(type, message, gifUrl)
         }
     }
 

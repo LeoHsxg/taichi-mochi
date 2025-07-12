@@ -15,13 +15,12 @@ import {
   Text,
 } from 'react-native';
 import PermissionScreen from './src/screens/PermissionScreen';
-import PomodoroScreen from './src/screens/PomodoroScreen';
 import DebugScreen from './src/screens/DebugScreen';
 import FCMTestScreen from './src/screens/FCMTestScreen';
+import ForegroundServiceTestScreen from './src/screens/ForegroundServiceTestScreen';
 import { permissionService } from './src/services/PermissionService';
 import { appMonitorService } from './src/services/AppMonitorService';
 import { overlayService } from './src/services/OverlayService';
-import { pomodoroService } from './src/services/PomodoroService';
 import { notificationService } from './src/services/NotificationService';
 import FCMService from './src/services/FCMService';
 import { DistractingApp } from './src/types';
@@ -102,16 +101,6 @@ function App() {
         overlayService.showDistractionAlert(appInfo.appName);
       });
 
-      // 設定 Pomodoro 完成處理器
-      pomodoroService.setOnSessionComplete(session => {
-        console.log('Pomodoro 會話完成:', session);
-        if (session.type === 'work') {
-          overlayService.showBreakReminder();
-        } else {
-          overlayService.showFocusReminder();
-        }
-      });
-
       console.log('所有服務初始化完成');
     } catch (error) {
       console.error('初始化服務失敗:', error);
@@ -178,7 +167,7 @@ function App() {
       );
     }
 
-    return <PomodoroScreen />;
+    return <ForegroundServiceTestScreen />;
   };
 
   const renderNavigation = () => {
@@ -199,7 +188,7 @@ function App() {
               currentScreen === 'main' && styles.activeNavButtonText,
             ]}
           >
-            主畫面
+            前景服務測試
           </Text>
         </TouchableOpacity>
         <TouchableOpacity

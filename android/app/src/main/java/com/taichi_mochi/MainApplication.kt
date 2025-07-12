@@ -1,5 +1,6 @@
 package com.taichi_mochi
 import com.taichi_mochi.FocusNativePackage
+import com.taichi_mochi.ForegroundServicePackage
 
 import android.app.Application
 import com.facebook.react.PackageList
@@ -19,6 +20,7 @@ class MainApplication : Application(), ReactApplication {
             PackageList(this).packages.apply {
               // Packages that cannot be autolinked yet can be added manually here, for example:
               add(FocusNativePackage())
+              add(ForegroundServicePackage())
             }
 
         override fun getJSMainModuleName(): String = "index"
