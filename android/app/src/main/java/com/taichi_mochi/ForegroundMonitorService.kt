@@ -10,6 +10,11 @@ import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
+import android.view.WindowManager
+import android.view.View
+import com.taichi_mochi.ui.OverlaySelfDeclaration
+import com.taichi_mochi.ui.OverlayGifLooping
+import com.taichi_mochi.ui.OverlayForcedBlocking
 
 // 前景服務：持續運行並處理 FCM 訊息來開啟對應的彈窗
 class ForegroundMonitorService : Service() {
@@ -126,15 +131,88 @@ class ForegroundMonitorService : Service() {
         }
     }
     
+    // Overlay 管理相關
+    private var windowManager: WindowManager? = null
+    private var overlayView: View? = null
+
+    // 顯示 overlay
+    fun showOverlay(type: String, message: String, gifUrl: String? = null) {
+        if (overlayView != null) {
+            Log.d(TAG, "已有 overlayView，略過")
+            return
+        }
+        if (windowManager == null) {
+            windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
+        }
+        overlayView = when (type) {
+            "type1" -> OverlaySelfDeclaration(this, message) {
+                hideOverlay()
+            }
+            "type2" -> OverlayGifLooping(this, gifUrl ?: "https://media.giphy.com/media/3oEjI6SIIHBdRxXI40/giphy.gif") {
+                hideOverlay()
+            }
+            "type3" -> OverlayForcedBlocking(this, message) {
+                // 強制導回 app
+                val launchIntent = packageManager.getLaunchIntentForPackage(packageName)
+                if (launchIntent != null) {
+                    launchIntent.addFlags(
+                        Intent.FLAG_ACTIVITY_NEW_TASK or 
+                        Intent.FLAG_ACTIVITY_CLEAR_TOP or
+                        Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
+                    )
+                    startActivity(launchIntent)
+                }
+                hideOverlay()
+            }
+            else -> OverlaySelfDeclaration(this, message) {
+                hideOverlay()
+            }
+        }
+        val params = WindowManager.LayoutParams(
+            WindowManager.LayoutParams.MATCH_PARENT,
+            WindowManager.LayoutParams.MATCH_PARENT,
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
+                WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
+            else
+                WindowManager.LayoutParams.TYPE_PHONE,
+            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
+            WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or
+            WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
+            android.graphics.PixelFormat.TRANSLUCENT
+        )
+        try {
+            windowManager?.addView(overlayView, params)
+            Log.d(TAG, "Overlay view added by ForegroundMonitorService")
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to add overlay view", e)
+        }
+    }
+
+    // 隱藏 overlay
+    fun hideOverlay() {
+        if (overlayView != null) {
+            try {
+                windowManager?.removeView(overlayView)
+                Log.d(TAG, "Overlay view removed by ForegroundMonitorService")
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to remove overlay view", e)
+            }
+            overlayView = null
+        }
+    }
+    
     fun handleIntent(intent: Intent) {
         // 處理從 FCM 或其他來源傳來的參數
         val showOverlay = intent.getBooleanExtra("show_overlay", false)
+        val hideOverlay = intent.getBooleanExtra("hide_overlay", false)
         val overlayType = intent.getStringExtra("overlay_type") ?: "type1"
         val overlayMessage = intent.getStringExtra("overlay_message") ?: "專注時間到！"
         val gifUrl = intent.getStringExtra("gif_url")
-        
         if (showOverlay) {
-            startOverlayService(overlayType, overlayMessage, gifUrl)
+            showOverlay(overlayType, overlayMessage, gifUrl)
+        }
+        if (hideOverlay) {
+            hideOverlay()
         }
     }
     

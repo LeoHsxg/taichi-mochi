@@ -9,6 +9,7 @@ import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.util.Log
+
 import com.taichi_mochi.ui.OverlayForcedBlocking
 import com.taichi_mochi.ui.OverlayGifLooping
 import com.taichi_mochi.ui.OverlaySelfDeclaration

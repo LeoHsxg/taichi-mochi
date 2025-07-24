@@ -61,7 +61,7 @@ export class ForegroundService {
   }
 
   /**
-   * 透過前景服務顯示 overlay
+   * 透過前景服務顯示 overlay（由 ForegroundMonitorService 直接管理 UI）
    */
   async showOverlay(
     type: string,
@@ -75,7 +75,7 @@ export class ForegroundService {
         message,
         gifUrl,
       );
-      console.log('Overlay 顯示成功');
+      console.log('Overlay 顯示成功（由 ForegroundMonitorService 管理）');
       return result;
     } catch (error) {
       console.error('顯示 overlay 失敗:', error);

@@ -138,7 +138,7 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
 
     /**
      * 手搓一則 Android 系統通知
-     * 通常是通知無法顯示獲 App 在前景時需要呼叫此方法
+     * 通常是通知無法顯示或 App 在前景時需要呼叫此方法
      */ 
     private fun sendNotification(title: String?, body: String?) {
         val intent = Intent(this, MainActivity::class.java)
