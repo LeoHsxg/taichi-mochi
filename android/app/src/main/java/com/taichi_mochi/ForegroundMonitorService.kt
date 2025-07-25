@@ -221,43 +221,6 @@ class ForegroundMonitorService : Service() {
         }
     }
     
-    private fun startOverlayService(type: String, message: String, gifUrl: String? = null) {
-        try {
-            val intent = Intent(this, OverlayService::class.java).apply {
-                putExtra("type", type)
-                putExtra("message", message)
-                if (gifUrl != null) {
-                    putExtra("gifUrl", gifUrl)
-                }
-            }
-            Log.d(TAG, "準備啟動 OverlayService, type=$type, message=$message, gifUrl=$gifUrl")
-            
-            // 檢查是否有 SYSTEM_ALERT_WINDOW 權限
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                if (android.provider.Settings.canDrawOverlays(this)) {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                        Log.d(TAG, "使用 startForegroundService 啟動 OverlayService")
-                        startForegroundService(intent)
-                    } else {
-                        Log.d(TAG, "使用 startService 啟動 OverlayService")
-                        startService(intent)
-                    }
-                } else {
-                    Log.w(TAG, "SYSTEM_ALERT_WINDOW permission not granted")
-                    // 如果沒有權限，發送通知作為備用
-                    sendFallbackNotification("需要權限", "請授予顯示在其他應用程式上層的權限")
-                }
-            } else {
-                Log.d(TAG, "使用 startService 啟動 OverlayService")
-                startService(intent)
-            }
-        } catch (e: Exception) {
-            Log.e(TAG, "Failed to start overlay service", e)
-            // 如果啟動失敗，發送通知作為備用
-            sendFallbackNotification("彈窗啟動失敗", "無法顯示專注提醒彈窗")
-        }
-    }
-    
     private fun sendFallbackNotification(title: String, body: String) {
         val notificationManager = getSystemService(NotificationManager::class.java)
         val notification = NotificationCompat.Builder(this, CHANNEL_ID)
