@@ -5,13 +5,14 @@
  * @format
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   TouchableOpacity,
   Text,
   StyleSheet,
   StatusBar,
+  BackHandler,
 } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import DebugNavigator from './src/navigation/DebugNavigator';
@@ -81,6 +82,18 @@ function App() {
 }
 
 function DebugNavigatorWithBack({ onBack }: { onBack: () => void }) {
+  useEffect(() => {
+    const onBackPress = () => {
+      onBack();
+      return true; // 阻止預設行為（直接退出 App）
+    };
+    const subscription = BackHandler.addEventListener(
+      'hardwareBackPress',
+      onBackPress,
+    );
+    return () => subscription.remove();
+  }, [onBack]);
+
   return (
     <View style={{ flex: 1 }}>
       <TouchableOpacity style={styles.backButton} onPress={onBack}>
@@ -98,11 +111,20 @@ function NavigatorWithBack({
   Navigator: React.ComponentType;
   onBack: () => void;
 }) {
+  useEffect(() => {
+    const onBackPress = () => {
+      onBack();
+      return true; // 阻止預設行為（直接退出 App）
+    };
+    const subscription = BackHandler.addEventListener(
+      'hardwareBackPress',
+      onBackPress,
+    );
+    return () => subscription.remove();
+  }, [onBack]);
+
   return (
     <View style={{ flex: 1 }}>
-      <TouchableOpacity style={styles.backButton} onPress={onBack}>
-        <Text style={styles.backButtonText}>← 返回選單</Text>
-      </TouchableOpacity>
       <NavigationContainer>
         <Navigator />
       </NavigationContainer>
