@@ -15,6 +15,8 @@ import android.view.View
 import com.taichi_mochi.ui.OverlaySelfDeclaration
 import com.taichi_mochi.ui.OverlayGifLooping
 import com.taichi_mochi.ui.OverlayForcedBlocking
+import android.os.Handler
+import android.os.Looper
 
 // 前景服務：持續運行並處理 FCM 訊息來開啟對應的彈窗
 class ForegroundMonitorService : Service() {
@@ -137,67 +139,70 @@ class ForegroundMonitorService : Service() {
 
     // 顯示 overlay
     fun showOverlay(type: String, message: String, gifUrl: String? = null) {
-        if (overlayView != null) {
-            Log.d(TAG, "已有 overlayView，略過")
-            return
-        }
-        if (windowManager == null) {
-            windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
-        }
-        overlayView = when (type) {
-            "type1" -> OverlaySelfDeclaration(this, message) {
-                hideOverlay()
+        Handler(Looper.getMainLooper()).post {
+            if (overlayView != null) {
+                Log.d(TAG, "已有 overlayView，略過")
+                return@post
             }
-            "type2" -> OverlayGifLooping(this, gifUrl ?: "https://media.giphy.com/media/3oEjI6SIIHBdRxXI40/giphy.gif") {
-                hideOverlay()
+            if (windowManager == null) {
+                windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
             }
-            "type3" -> OverlayForcedBlocking(this, message) {
-                // 強制導回 app
-                val launchIntent = packageManager.getLaunchIntentForPackage(packageName)
-                if (launchIntent != null) {
-                    launchIntent.addFlags(
-                        Intent.FLAG_ACTIVITY_NEW_TASK or 
-                        Intent.FLAG_ACTIVITY_CLEAR_TOP or
-                        Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
-                    )
-                    startActivity(launchIntent)
+            overlayView = when (type) {
+                "type1" -> OverlaySelfDeclaration(this, message) {
+                    hideOverlay()
                 }
-                hideOverlay()
+                "type2" -> OverlayGifLooping(this, gifUrl ?: "https://media.giphy.com/media/3oEjI6SIIHBdRxXI40/giphy.gif") {
+                    hideOverlay()
+                }
+                "type3" -> OverlayForcedBlocking(this, message) {
+                    val launchIntent = packageManager.getLaunchIntentForPackage(packageName)
+                    if (launchIntent != null) {
+                        launchIntent.addFlags(
+                            Intent.FLAG_ACTIVITY_NEW_TASK or 
+                            Intent.FLAG_ACTIVITY_CLEAR_TOP or
+                            Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
+                        )
+                        startActivity(launchIntent)
+                    }
+                    hideOverlay()
+                }
+                else -> OverlaySelfDeclaration(this, message) {
+                    hideOverlay()
+                }
             }
-            else -> OverlaySelfDeclaration(this, message) {
-                hideOverlay()
+            val params = WindowManager.LayoutParams(
+                WindowManager.LayoutParams.MATCH_PARENT,
+                WindowManager.LayoutParams.MATCH_PARENT,
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
+                    WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
+                else
+                    WindowManager.LayoutParams.TYPE_PHONE,
+                WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
+                WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or
+                WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
+                android.graphics.PixelFormat.TRANSLUCENT
+            )
+            try {
+                windowManager?.addView(overlayView, params)
+                Log.d(TAG, "Overlay view added by ForegroundMonitorService")
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to add overlay view", e)
             }
-        }
-        val params = WindowManager.LayoutParams(
-            WindowManager.LayoutParams.MATCH_PARENT,
-            WindowManager.LayoutParams.MATCH_PARENT,
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
-                WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
-            else
-                WindowManager.LayoutParams.TYPE_PHONE,
-            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
-            WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or
-            WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
-            android.graphics.PixelFormat.TRANSLUCENT
-        )
-        try {
-            windowManager?.addView(overlayView, params)
-            Log.d(TAG, "Overlay view added by ForegroundMonitorService")
-        } catch (e: Exception) {
-            Log.e(TAG, "Failed to add overlay view", e)
         }
     }
 
     // 隱藏 overlay
     fun hideOverlay() {
-        if (overlayView != null) {
-            try {
-                windowManager?.removeView(overlayView)
-                Log.d(TAG, "Overlay view removed by ForegroundMonitorService")
-            } catch (e: Exception) {
-                Log.e(TAG, "Failed to remove overlay view", e)
+        Handler(Looper.getMainLooper()).post {
+            if (overlayView != null) {
+                try {
+                    windowManager?.removeView(overlayView)
+                    Log.d(TAG, "Overlay view removed by ForegroundMonitorService")
+                } catch (e: Exception) {
+                    Log.e(TAG, "Failed to remove overlay view", e)
+                }
+                overlayView = null
             }
-            overlayView = null
         }
     }
     
