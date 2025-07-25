@@ -13,6 +13,7 @@ import {
   StyleSheet,
   StatusBar,
 } from 'react-native';
+import { NavigationContainer } from '@react-navigation/native';
 import DebugNavigator from './src/navigation/DebugNavigator';
 import AuthNavigator from './src/navigation/AuthNavigator';
 import OnboardingNavigator from './src/navigation/OnboardingNavigator';
@@ -102,7 +103,9 @@ function NavigatorWithBack({
       <TouchableOpacity style={styles.backButton} onPress={onBack}>
         <Text style={styles.backButtonText}>← 返回選單</Text>
       </TouchableOpacity>
-      <Navigator />
+      <NavigationContainer>
+        <Navigator />
+      </NavigationContainer>
     </View>
   );
 }
@@ -125,7 +128,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 32,
     borderRadius: 8,
     marginVertical: 12,
-    width: 240,
+    width: 320,
     alignItems: 'center',
   },
   menuButtonText: {
