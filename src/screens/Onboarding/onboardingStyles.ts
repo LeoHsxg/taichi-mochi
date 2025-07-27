@@ -51,6 +51,7 @@ const onboardingStyles = StyleSheet.create({
   },
   title: {
     color: '#FF2171',
+    // fontFamily: 'Jaro', // 暫時註解掉字體
     fontSize: 24,
     fontWeight: 'bold',
     textAlign: 'center',
