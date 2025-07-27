@@ -86,14 +86,14 @@ const ForegroundServiceTestScreen: React.FC = () => {
       );
       if (result) {
         addLog('Overlay 顯示成功');
-        Alert.alert('成功', 'Overlay 已顯示');
+        // Alert.alert('成功', 'Overlay 已顯示');
       } else {
         addLog('Overlay 顯示失敗');
-        Alert.alert('失敗', 'Overlay 顯示失敗');
+        // Alert.alert('失敗', 'Overlay 顯示失敗');
       }
     } catch (error) {
       addLog(`顯示 overlay 錯誤: ${error}`);
-      Alert.alert('錯誤', `顯示 overlay 失敗: ${error}`);
+      // Alert.alert('錯誤', `顯示 overlay 失敗: ${error}`);
     }
   };
 

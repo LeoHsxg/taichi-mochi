@@ -14,7 +14,8 @@ import androidx.cardview.widget.CardView
 class OverlayForcedBlocking(
     context: Context, 
     message: String, 
-    onButtonClick: (() -> Unit)? = null
+    onLeftButtonClick: (() -> Unit)? = null,
+    onRightButtonClick: (() -> Unit)? = null
 ) : LinearLayout(context) {
     init {
         layoutParams = LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT)
@@ -126,7 +127,7 @@ class OverlayForcedBlocking(
         leftButton.background = leftButtonBackground
         
         leftButton.setOnClickListener {
-            onButtonClick?.invoke()
+            onLeftButtonClick?.invoke()
         }
 
         // 右邊按鈕
@@ -147,7 +148,7 @@ class OverlayForcedBlocking(
         rightButton.background = rightButtonBackground
         
         rightButton.setOnClickListener {
-            onButtonClick?.invoke()
+            onRightButtonClick?.invoke()
         }
 
         buttonContainer.addView(leftButton)

@@ -154,18 +154,31 @@ class ForegroundMonitorService : Service() {
                 "type2" -> OverlayGifLooping(this, gifUrl ?: "https://media.giphy.com/media/3oEjI6SIIHBdRxXI40/giphy.gif") {
                     hideOverlay()
                 }
-                "type3" -> OverlayForcedBlocking(this, message) {
-                    val launchIntent = packageManager.getLaunchIntentForPackage(packageName)
-                    if (launchIntent != null) {
-                        launchIntent.addFlags(
-                            Intent.FLAG_ACTIVITY_NEW_TASK or 
-                            Intent.FLAG_ACTIVITY_CLEAR_TOP or
-                            Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
-                        )
+                "type3" -> OverlayForcedBlocking(
+                    this, 
+                    message,
+                    // 左邊按鈕：跳到桌面
+                    onLeftButtonClick = {
+                        val homeIntent = Intent(Intent.ACTION_MAIN)
+                        homeIntent.addCategory(Intent.CATEGORY_HOME)
+                        homeIntent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                        startActivity(homeIntent)
+                        hideOverlay()
+                    },
+                    // 右邊按鈕：回到麻糬app的麻糬分頁
+                    onRightButtonClick = {
+                        val launchIntent = Intent(this, MainActivity::class.java).apply {
+                            flags = Intent.FLAG_ACTIVITY_NEW_TASK or 
+                                   Intent.FLAG_ACTIVITY_CLEAR_TOP or
+                                   Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
+                            // 添加 deep link 參數來指定導航到麻糬分頁
+                            data = android.net.Uri.parse("taichi-mochi://mochi-tab")
+                            putExtra("navigate_to", "MochiTab")
+                        }
                         startActivity(launchIntent)
+                        hideOverlay()
                     }
-                    hideOverlay()
-                }
+                )
                 else -> OverlaySelfDeclaration(this, message) {
                     hideOverlay()
                 }
