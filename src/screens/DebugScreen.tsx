@@ -70,7 +70,7 @@ const DebugScreen: React.FC = () => {
   const testForcedBlockingOverlay = () => {
     addLog('測試強制阻擋 Overlay...');
     FocusNativeModule.showForcedBlockingOverlay(
-      '這是一個強制阻擋的測試彈窗，按鈕會導回 Mochi App',
+      "Seriously, stop scrolling! 😤\n You're clearly getting addicted + anxious now!\n We're gonna FORCE-quit\n to save you from this vortex! 🚨💥",
     );
     addLog('強制阻擋 Overlay 已顯示');
   };
