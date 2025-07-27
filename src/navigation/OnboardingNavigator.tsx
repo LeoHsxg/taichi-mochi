@@ -56,6 +56,7 @@ const OnboardingSwiper = () => {
   };
 
   // ←—— 這裡不再用 useRef，直接每次 render 都重建
+  // 什麼是 useRef 我其實沒概念呵呵呵，需要搞懂，但感覺那不是個好用東西
   const panResponder = PanResponder.create({
     onMoveShouldSetPanResponder: (_, g) =>
       Math.abs(g.dx) > 20 && Math.abs(g.dy) < 30,

@@ -34,6 +34,16 @@ const onboardingStyles = StyleSheet.create({
     height: undefined,
     alignSelf: 'center',
   },
+  pic: {
+    position: 'absolute',
+    top: 130,
+    left: 0,
+    right: 0,
+    width: SCREEN_WIDTH,
+    height: undefined,
+    aspectRatio: 1524 / 1468,
+    alignSelf: 'center',
+  },
   textContainer: {
     marginTop: SCREEN_HEIGHT * 0.55,
     paddingHorizontal: 32,
