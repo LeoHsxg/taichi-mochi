@@ -8,8 +8,16 @@ import {
   // Linking,
 } from 'react-native';
 
-const WelcomeScreen = () => {
+const WelcomeScreen = ({ navigation }: any) => {
   const [checked, setChecked] = useState(false);
+
+  const handleLogin = () => {
+    navigation.navigate('Login');
+  };
+
+  const handleSignUp = () => {
+    navigation.navigate('Signup');
+  };
 
   return (
     <View style={styles.container}>
@@ -40,11 +48,11 @@ const WelcomeScreen = () => {
       />
 
       {/* Login 按鈕 */}
-      <TouchableOpacity style={styles.loginBtn}>
+      <TouchableOpacity style={styles.loginBtn} onPress={handleLogin}>
         <Text style={styles.loginBtnText}>Login</Text>
       </TouchableOpacity>
       {/* Sign Up 按鈕 */}
-      <TouchableOpacity style={styles.signupBtn}>
+      <TouchableOpacity style={styles.signupBtn} onPress={handleSignUp}>
         <Text style={styles.signupBtnText}>Sign Up</Text>
       </TouchableOpacity>
 

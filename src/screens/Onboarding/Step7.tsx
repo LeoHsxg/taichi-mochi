@@ -25,7 +25,7 @@ const Step7 = () => (
     </Text>
 
     <Image
-      source={require('../../../assets/images/mochi/mochi_onboard.png')}
+      source={require('../../../assets/images/mochi/mochi_happy.png')}
       style={styles.mochiImage}
       resizeMode="contain"
     />
