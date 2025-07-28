@@ -1,5 +1,6 @@
 export const lightColors = {
   background: '#ffffff',
+  barBackground: '#ffffff',
   border: '#e5e7eb',
   active: '#6366f1',
   inactive: '#9ca3af',
@@ -7,9 +8,10 @@ export const lightColors = {
 };
 
 export const darkColors = {
-  background: '#18181b',
+  background: '#333333',
+  barBackground: '#242424',
   border: '#27272a',
-  active: '#6366f1',
+  active: '#FF0066',
   inactive: '#71717a',
   shadow: '#000',
 };

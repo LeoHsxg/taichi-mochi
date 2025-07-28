@@ -60,7 +60,7 @@ const MainTabNavigator = () => {
         tabBarActiveTintColor: colors.active,
         tabBarInactiveTintColor: colors.inactive,
         tabBarStyle: {
-          backgroundColor: colors.background,
+          backgroundColor: colors.barBackground,
           borderTopWidth: 1,
           borderTopColor: colors.border,
           paddingBottom: 8,

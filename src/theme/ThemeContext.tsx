@@ -8,7 +8,7 @@ const ThemeContext = createContext({
 });
 
 export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
-  const [isDark, setIsDark] = useState(false);
+  const [isDark, setIsDark] = useState(true); // 改為 true，預設深色主題
   const colors = isDark ? darkColors : lightColors;
   const toggleTheme = () => setIsDark(v => !v);
 
