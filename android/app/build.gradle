@@ -134,3 +134,5 @@ dependencies {
     // CardView for UI components
     implementation 'androidx.cardview:cardview:1.0.0'
 }
+
+

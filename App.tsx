@@ -19,6 +19,7 @@ import DebugNavigator from './src/navigation/DebugNavigator';
 import AuthNavigator from './src/navigation/AuthNavigator';
 import OnboardingNavigator from './src/navigation/OnboardingNavigator';
 import MainTabNavigator from './src/navigation/MainTabNavigator';
+import { ThemeProvider } from './src/theme/ThemeContext';
 
 const FLOW = {
   MENU: 'menu',
@@ -30,7 +31,7 @@ const FLOW = {
 
 type FlowType = keyof typeof FLOW;
 
-function App() {
+export default function App() {
   const [flow, setFlow] = useState<FlowType>('MENU');
 
   const renderMenu = () => (
@@ -124,11 +125,13 @@ function NavigatorWithBack({
   }, [onBack]);
 
   return (
-    <View style={{ flex: 1 }}>
-      <NavigationContainer>
-        <Navigator />
-      </NavigationContainer>
-    </View>
+    <ThemeProvider>
+      <View style={{ flex: 1 }}>
+        <NavigationContainer>
+          <Navigator />
+        </NavigationContainer>
+      </View>
+    </ThemeProvider>
   );
 }
 
@@ -168,5 +171,3 @@ const styles = StyleSheet.create({
     color: '#2196F3',
   },
 });
-
-export default App;
