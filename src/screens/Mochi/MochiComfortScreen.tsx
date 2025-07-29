@@ -10,11 +10,13 @@ import {
 } from 'react-native';
 import Svg, { Circle, Defs, RadialGradient, Stop } from 'react-native-svg';
 import { useTheme } from '../../theme/ThemeContext';
+import { useNavigation } from '@react-navigation/native';
 
 const { width: screenWidth } = Dimensions.get('window');
 
 const MochiComfortScreen = () => {
   const { colors } = useTheme();
+  const navigation = useNavigation<any>();
 
   // 定義三個按鈕的初始座標
   const BUTTON_INITIAL_POSITIONS = {
@@ -144,14 +146,17 @@ const MochiComfortScreen = () => {
 
   const handleDeepBreath = () => {
     console.log('Deep Breath pressed');
+    navigation.navigate('Meditation');
   };
 
   const handleMeditate = () => {
     console.log('Meditate pressed');
+    navigation.navigate('Meditation');
   };
 
   const handleTakeWalk = () => {
     console.log('Take Walk pressed');
+    navigation.navigate('Meditation');
   };
 
   return (
