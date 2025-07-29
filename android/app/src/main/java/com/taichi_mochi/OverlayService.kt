@@ -17,6 +17,7 @@ import com.taichi_mochi.ui.OverlaySelfDeclaration
 class OverlayService : Service() {
     private var windowManager: WindowManager? = null    // 系統的 WindowManager，用來插入與移除 overlay
     private var overlayView: View? = null               // 當前正在顯示的 overlay View
+    private var gifOverlay: OverlayGifLooping? = null  // GIF overlay 實例
 
     override fun onBind(intent: Intent?): IBinder? = null   // 不提供 bind 功能
 
@@ -40,39 +41,51 @@ class OverlayService : Service() {
         val message = intent?.getStringExtra("message") ?: "專注時間到！"
 
         // 根據 type 參數建立對應的 overlayView，並傳入按鈕點擊後的 callback
-        overlayView = when (type) {
-            "type1" -> OverlaySelfDeclaration(this, message) {
-                // 只關閉 overlay，讓使用者繼續使用
-                stopSelf()
-            }
-            "type2" -> OverlayGifLooping(this) {
-                stopSelf()
-            }
-            "type3" -> OverlayForcedBlocking(this, message) {
-                // 強制導回 app
-                val launchIntent = packageManager.getLaunchIntentForPackage(packageName)
-                if (launchIntent != null) {
-                    launchIntent.addFlags(
-                        Intent.FLAG_ACTIVITY_NEW_TASK or 
-                        Intent.FLAG_ACTIVITY_CLEAR_TOP or
-                        Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
-                    )
-                    startActivity(launchIntent)
+        when (type) {
+            "type1" -> {
+                overlayView = OverlaySelfDeclaration(this, message) {
+                    // 只關閉 overlay，讓使用者繼續使用
+                    stopSelf()
                 }
-                stopSelf()
             }
-            else -> OverlaySelfDeclaration(this, message) {
-                // 強制導回 app
-                val launchIntent = packageManager.getLaunchIntentForPackage(packageName)
-                if (launchIntent != null) {
-                    launchIntent.addFlags(
-                        Intent.FLAG_ACTIVITY_NEW_TASK or 
-                        Intent.FLAG_ACTIVITY_CLEAR_TOP or
-                        Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
-                    )
-                    startActivity(launchIntent)
+            "type2" -> {
+                // 特殊處理 GIF overlay，它現在管理自己的 window
+                gifOverlay = OverlayGifLooping(this) {
+                    stopSelf()
                 }
-                stopSelf()
+                gifOverlay?.show()
+                // 不設定 overlayView，因為 GIF overlay 自己管理 window
+                return START_STICKY
+            }
+            "type3" -> {
+                overlayView = OverlayForcedBlocking(this, message) {
+                    // 強制導回 app
+                    val launchIntent = packageManager.getLaunchIntentForPackage(packageName)
+                    if (launchIntent != null) {
+                        launchIntent.addFlags(
+                            Intent.FLAG_ACTIVITY_NEW_TASK or 
+                            Intent.FLAG_ACTIVITY_CLEAR_TOP or
+                            Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
+                        )
+                        startActivity(launchIntent)
+                    }
+                    stopSelf()
+                }
+            }
+            else -> {
+                overlayView = OverlaySelfDeclaration(this, message) {
+                    // 強制導回 app
+                    val launchIntent = packageManager.getLaunchIntentForPackage(packageName)
+                    if (launchIntent != null) {
+                        launchIntent.addFlags(
+                            Intent.FLAG_ACTIVITY_NEW_TASK or 
+                            Intent.FLAG_ACTIVITY_CLEAR_TOP or
+                            Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
+                        )
+                        startActivity(launchIntent)
+                    }
+                    stopSelf()
+                }
             }
         }
 
@@ -89,8 +102,10 @@ class OverlayService : Service() {
             // flag 設定：
             WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or   // 不獲取焦點
             WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or // 在螢幕內顯示
-            WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,  // 不限制大小
-            PixelFormat.TRANSLUCENT
+            WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS or // 不限制大小
+            WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL or // 不阻擋觸控事件
+            WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH, // 監聽外部觸控事件
+            PixelFormat.TRANSPARENT  // 使用透明格式，移除半透明效果
         )
         // 螢幕填滿時，不會有 gravity 設定
         // params.gravity = Gravity.TOP or Gravity.LEFT
@@ -109,6 +124,19 @@ class OverlayService : Service() {
     override fun onDestroy() {
         super.onDestroy()
         Log.d("OverlayService", "Service destroying")
+        
+        // 處理 GIF overlay
+        if (gifOverlay != null) {
+            try {
+                gifOverlay?.hide()
+                Log.d("OverlayService", "GIF overlay removed")
+            } catch (e: Exception) {
+                Log.e("OverlayService", "Failed to remove GIF overlay", e)
+            }
+            gifOverlay = null
+        }
+        
+        // 處理其他 overlay
         if (overlayView != null) {
             try {
                 windowManager?.removeView(overlayView)

@@ -136,6 +136,7 @@ class ForegroundMonitorService : Service() {
     // Overlay 管理相關
     private var windowManager: WindowManager? = null
     private var overlayView: View? = null
+    private var gifOverlay: OverlayGifLooping? = null
 
     // 顯示 overlay
     fun showOverlay(type: String, message: String) {
@@ -147,59 +148,77 @@ class ForegroundMonitorService : Service() {
             if (windowManager == null) {
                 windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
             }
-            overlayView = when (type) {
-                "type1" -> OverlaySelfDeclaration(this, message) {
-                    hideOverlay()
-                }
-                "type2" -> OverlayGifLooping(this) {
-                    hideOverlay()
-                }
-                "type3" -> OverlayForcedBlocking(
-                    this, 
-                    message,
-                    // 左邊按鈕：跳到桌面
-                    onLeftButtonClick = {
-                        val homeIntent = Intent(Intent.ACTION_MAIN)
-                        homeIntent.addCategory(Intent.CATEGORY_HOME)
-                        homeIntent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                        startActivity(homeIntent)
-                        hideOverlay()
-                    },
-                    // 右邊按鈕：回到麻糬app的麻糬分頁
-                    onRightButtonClick = {
-                        val launchIntent = Intent(this, MainActivity::class.java).apply {
-                            flags = Intent.FLAG_ACTIVITY_NEW_TASK or 
-                                   Intent.FLAG_ACTIVITY_CLEAR_TOP or
-                                   Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
-                            // 添加 deep link 參數來指定導航到麻糬分頁
-                            data = android.net.Uri.parse("taichi-mochi://mochi-tab")
-                            putExtra("navigate_to", "MochiTab")
-                        }
-                        startActivity(launchIntent)
+            when (type) {
+                "type1" -> {
+                    overlayView = OverlaySelfDeclaration(this, message) {
                         hideOverlay()
                     }
-                )
-                else -> OverlaySelfDeclaration(this, message) {
-                    hideOverlay()
+                }
+                "type2" -> {
+                    // 特殊處理 GIF overlay，它現在管理自己的 window
+                    gifOverlay = OverlayGifLooping(this) {
+                        hideOverlay()
+                    }
+                    gifOverlay?.show()
+                    // 不設定 overlayView，因為 GIF overlay 自己管理 window
+                    return@post
+                }
+                "type3" -> {
+                    overlayView = OverlayForcedBlocking(
+                        this, 
+                        message,
+                        // 左邊按鈕：跳到桌面
+                        onLeftButtonClick = {
+                            val homeIntent = Intent(Intent.ACTION_MAIN)
+                            homeIntent.addCategory(Intent.CATEGORY_HOME)
+                            homeIntent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                            startActivity(homeIntent)
+                            hideOverlay()
+                        },
+                        // 右邊按鈕：回到麻糬app的麻糬分頁
+                        onRightButtonClick = {
+                            val launchIntent = Intent(this, MainActivity::class.java).apply {
+                                flags = Intent.FLAG_ACTIVITY_NEW_TASK or 
+                                       Intent.FLAG_ACTIVITY_CLEAR_TOP or
+                                       Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
+                                // 添加 deep link 參數來指定導航到麻糬分頁
+                                data = android.net.Uri.parse("taichi-mochi://mochi-tab")
+                                putExtra("navigate_to", "MochiTab")
+                            }
+                            startActivity(launchIntent)
+                            hideOverlay()
+                        }
+                    )
+                }
+                else -> {
+                    overlayView = OverlaySelfDeclaration(this, message) {
+                        hideOverlay()
+                    }
                 }
             }
-            val params = WindowManager.LayoutParams(
-                WindowManager.LayoutParams.MATCH_PARENT,
-                WindowManager.LayoutParams.MATCH_PARENT,
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
-                    WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
-                else
-                    WindowManager.LayoutParams.TYPE_PHONE,
-                WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
-                WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or
-                WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
-                android.graphics.PixelFormat.TRANSLUCENT
-            )
-            try {
-                windowManager?.addView(overlayView, params)
-                Log.d(TAG, "Overlay view added by ForegroundMonitorService")
-            } catch (e: Exception) {
-                Log.e(TAG, "Failed to add overlay view", e)
+            
+            // 只有非 type2 的 overlay 才需要添加到 windowManager
+            if (overlayView != null) {
+                val params = WindowManager.LayoutParams(
+                    WindowManager.LayoutParams.MATCH_PARENT,
+                    WindowManager.LayoutParams.MATCH_PARENT,
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
+                        WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
+                    else
+                        WindowManager.LayoutParams.TYPE_PHONE,
+                    WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
+                    WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or
+                    WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS or
+                    WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL or
+                    WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH,
+                    android.graphics.PixelFormat.TRANSPARENT
+                )
+                try {
+                    windowManager?.addView(overlayView, params)
+                    Log.d(TAG, "Overlay view added by ForegroundMonitorService")
+                } catch (e: Exception) {
+                    Log.e(TAG, "Failed to add overlay view", e)
+                }
             }
         }
     }
@@ -207,6 +226,18 @@ class ForegroundMonitorService : Service() {
     // 隱藏 overlay
     fun hideOverlay() {
         Handler(Looper.getMainLooper()).post {
+            // 處理 GIF overlay
+            if (gifOverlay != null) {
+                try {
+                    gifOverlay?.hide()
+                    Log.d(TAG, "GIF overlay removed by ForegroundMonitorService")
+                } catch (e: Exception) {
+                    Log.e(TAG, "Failed to remove GIF overlay", e)
+                }
+                gifOverlay = null
+            }
+            
+            // 處理其他 overlay
             if (overlayView != null) {
                 try {
                     windowManager?.removeView(overlayView)
