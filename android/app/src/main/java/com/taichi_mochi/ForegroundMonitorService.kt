@@ -138,7 +138,7 @@ class ForegroundMonitorService : Service() {
     private var overlayView: View? = null
 
     // 顯示 overlay
-    fun showOverlay(type: String, message: String, gifUrl: String? = null) {
+    fun showOverlay(type: String, message: String) {
         Handler(Looper.getMainLooper()).post {
             if (overlayView != null) {
                 Log.d(TAG, "已有 overlayView，略過")
@@ -151,7 +151,7 @@ class ForegroundMonitorService : Service() {
                 "type1" -> OverlaySelfDeclaration(this, message) {
                     hideOverlay()
                 }
-                "type2" -> OverlayGifLooping(this, gifUrl ?: "https://media.giphy.com/media/3oEjI6SIIHBdRxXI40/giphy.gif") {
+                "type2" -> OverlayGifLooping(this) {
                     hideOverlay()
                 }
                 "type3" -> OverlayForcedBlocking(
@@ -225,9 +225,8 @@ class ForegroundMonitorService : Service() {
         val hideOverlay = intent.getBooleanExtra("hide_overlay", false)
         val overlayType = intent.getStringExtra("overlay_type") ?: "type1"
         val overlayMessage = intent.getStringExtra("overlay_message") ?: "專注時間到！"
-        val gifUrl = intent.getStringExtra("gif_url")
         if (showOverlay) {
-            showOverlay(overlayType, overlayMessage, gifUrl)
+            showOverlay(overlayType, overlayMessage)
         }
         if (hideOverlay) {
             hideOverlay()

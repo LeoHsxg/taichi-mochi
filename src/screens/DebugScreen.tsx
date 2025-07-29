@@ -61,10 +61,8 @@ const DebugScreen: React.FC = () => {
 
   const testGifLoopingOverlay = () => {
     addLog('測試循環 GIF Overlay...');
-    FocusNativeModule.showGifLoopingOverlay(
-      'https://media.giphy.com/media/3oEjI6SIIHBdRxXI40/giphy.gif',
-    );
-    addLog('循環 GIF Overlay 已顯示');
+    FocusNativeModule.showGifLoopingOverlay();
+    addLog('循環 GIF Overlay 已顯示（使用本地 mochi_jumping.GIF）');
   };
 
   const testForcedBlockingOverlay = () => {

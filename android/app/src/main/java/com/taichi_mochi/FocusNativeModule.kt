@@ -86,10 +86,9 @@ class FocusNativeModule(reactContext: ReactApplicationContext) : ReactContextBas
 
     // 新增：循環 GIF overlay
     @ReactMethod
-    fun showGifLoopingOverlay(gifUrl: String) {
+    fun showGifLoopingOverlay() {
         val intent = Intent(reactApplicationContext, OverlayService::class.java)
         intent.putExtra("type", "type2")
-        intent.putExtra("gifUrl", gifUrl)
         reactApplicationContext.startService(intent)
     }
 

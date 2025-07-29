@@ -68,7 +68,7 @@ class ForegroundServiceModule(reactContext: ReactApplicationContext) : ReactCont
     }
 
     @ReactMethod
-    fun showOverlay(type: String, message: String, gifUrl: String?, promise: Promise) {
+    fun showOverlay(type: String, message: String, promise: Promise) {
         try {
             Log.d(TAG, "透過前景服務顯示 overlay, type=$type, message=$message")
             
@@ -78,9 +78,6 @@ class ForegroundServiceModule(reactContext: ReactApplicationContext) : ReactCont
                     putExtra("show_overlay", true)
                     putExtra("overlay_type", type)
                     putExtra("overlay_message", message)
-                    if (gifUrl != null) {
-                        putExtra("gif_url", gifUrl)
-                    }
                 }
                 foregroundService.handleIntent(intent)
                 promise.resolve(true)

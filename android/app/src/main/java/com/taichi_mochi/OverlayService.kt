@@ -38,7 +38,6 @@ class OverlayService : Service() {
         // 取得 intent 中的參數
         val type = intent?.getStringExtra("type") ?: "type1"
         val message = intent?.getStringExtra("message") ?: "專注時間到！"
-        val gifUrl = intent?.getStringExtra("gifUrl")
 
         // 根據 type 參數建立對應的 overlayView，並傳入按鈕點擊後的 callback
         overlayView = when (type) {
@@ -46,7 +45,7 @@ class OverlayService : Service() {
                 // 只關閉 overlay，讓使用者繼續使用
                 stopSelf()
             }
-            "type2" -> OverlayGifLooping(this, gifUrl ?: "https://media.giphy.com/media/3oEjI6SIIHBdRxXI40/giphy.gif") {
+            "type2" -> OverlayGifLooping(this) {
                 stopSelf()
             }
             "type3" -> OverlayForcedBlocking(this, message) {

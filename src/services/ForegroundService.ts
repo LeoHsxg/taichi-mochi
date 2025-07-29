@@ -63,18 +63,10 @@ export class ForegroundService {
   /**
    * 透過前景服務顯示 overlay（由 ForegroundMonitorService 直接管理 UI）
    */
-  async showOverlay(
-    type: string,
-    message: string,
-    gifUrl?: string,
-  ): Promise<boolean> {
+  async showOverlay(type: string, message: string): Promise<boolean> {
     try {
       console.log(`透過前景服務顯示 overlay: type=${type}, message=${message}`);
-      const result = await ForegroundServiceModule.showOverlay(
-        type,
-        message,
-        gifUrl,
-      );
+      const result = await ForegroundServiceModule.showOverlay(type, message);
       console.log('Overlay 顯示成功（由 ForegroundMonitorService 管理）');
       return result;
     } catch (error) {

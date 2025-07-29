@@ -14,9 +14,7 @@ const ForegroundServiceTestScreen: React.FC = () => {
   const [isServiceRunning, setIsServiceRunning] = useState(false);
   const [overlayType, setOverlayType] = useState('type1');
   const [overlayMessage, setOverlayMessage] = useState('專注時間到！');
-  const [gifUrl, setGifUrl] = useState(
-    'https://media.giphy.com/media/3oEjI6SIIHBdRxXI40/giphy.gif',
-  );
+  // 使用本地 mochi_jumping.GIF 檔案
   const [logs, setLogs] = useState<string[]>([]);
 
   const addLog = (message: string) => {
@@ -82,7 +80,6 @@ const ForegroundServiceTestScreen: React.FC = () => {
       const result = await ForegroundService.showOverlay(
         overlayType,
         overlayMessage,
-        gifUrl,
       );
       if (result) {
         addLog('Overlay 顯示成功');
@@ -109,9 +106,6 @@ const ForegroundServiceTestScreen: React.FC = () => {
         '",\n' +
         '  "overlay_message": "' +
         overlayMessage +
-        '",\n' +
-        '  "gif_url": "' +
-        gifUrl +
         '"\n' +
         '}',
     );
@@ -243,13 +237,8 @@ const ForegroundServiceTestScreen: React.FC = () => {
           placeholder="輸入顯示訊息"
         />
 
-        <Text style={styles.label}>GIF URL (type2 使用):</Text>
-        <TextInput
-          style={styles.input}
-          value={gifUrl}
-          onChangeText={setGifUrl}
-          placeholder="輸入 GIF URL"
-        />
+        <Text style={styles.label}>GIF 設定 (type2 使用):</Text>
+        <Text style={styles.logText}>使用本地 mochi_jumping.GIF 檔案</Text>
 
         <TouchableOpacity
           style={[styles.button, styles.overlayButton]}

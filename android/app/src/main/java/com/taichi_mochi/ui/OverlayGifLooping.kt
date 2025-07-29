@@ -10,7 +10,6 @@ import com.bumptech.glide.Glide
 
 class OverlayGifLooping(
     context: Context, 
-    gifUrl: String,
     onButtonClick: (() -> Unit)? = null
 ) : LinearLayout(context) {
     init {
@@ -19,14 +18,17 @@ class OverlayGifLooping(
         orientation = VERTICAL
         setBackgroundColor(0xCC000000.toInt()) // 半透明黑色背景
         gravity = Gravity.CENTER
-        setPadding(60, 60, 60, 60)
+        setPadding(0, 0, 0, 0) // 移除 padding 讓 GIF 可以全屏顯示
 
         val imageView = ImageView(context)
-        val imageParams = LayoutParams(LayoutParams.MATCH_PARENT, 0, 1f) // 使用 weight 讓圖片佔用剩餘空間
+        val imageParams = LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT) // 讓圖片填滿整個螢幕
         imageView.layoutParams = imageParams
-        imageView.scaleType = ImageView.ScaleType.FIT_CENTER
-        // 使用 Glide 載入 GIF
-        Glide.with(context).asGif().load(gifUrl).into(imageView)
+        imageView.scaleType = ImageView.ScaleType.CENTER_CROP // 使用 CENTER_CROP 讓圖片填滿螢幕
+        // 使用 Glide 載入本地的 mochi_jumping.GIF
+        Glide.with(context)
+            .asGif()
+            .load("file:///android_asset/mochi/mochi_jumping.GIF")
+            .into(imageView)
         addView(imageView)
 
         val button = Button(context)
@@ -34,10 +36,10 @@ class OverlayGifLooping(
         button.textSize = 20f
         button.setPadding(60, 20, 60, 20)
         
-        // 為按鈕設置佈局參數，確保它有固定高度
+        // 為按鈕設置佈局參數，讓它浮在 GIF 上方
         val buttonParams = LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT)
-        buttonParams.gravity = Gravity.CENTER_HORIZONTAL
-        buttonParams.topMargin = 20 // 在按鈕上方添加一些間距
+        buttonParams.gravity = Gravity.CENTER_HORIZONTAL or Gravity.BOTTOM
+        buttonParams.bottomMargin = 50 // 距離底部的間距
         button.layoutParams = buttonParams
         
         button.setOnClickListener {

@@ -42,13 +42,11 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
         val showOverlay = remoteMessage.data["show_overlay"]?.toBoolean() ?: false
         val overlayType = remoteMessage.data["overlay_type"] ?: "type1"
         val overlayMessage = remoteMessage.data["overlay_message"] ?: "專注時間到！"
-        val gifUrl = remoteMessage.data["gif_url"]
-        
         if (showOverlay) {
             // 僅透過前景服務啟動 overlay
             if (ForegroundMonitorService.isRunning()) {
                 Log.d("FCM", "前景服務正在運行，透過前景服務啟動 overlay")
-                startOverlayViaForegroundService(overlayType, overlayMessage, gifUrl)
+                startOverlayViaForegroundService(overlayType, overlayMessage)
             } else {
                 Log.d("FCM", "前景服務未運行，overlay 啟動失敗")
             }
@@ -70,7 +68,7 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
     /**
      * 透過前景服務啟動 Overlay
      */
-    private fun startOverlayViaForegroundService(type: String, message: String, gifUrl: String? = null) {
+    private fun startOverlayViaForegroundService(type: String, message: String) {
         try {
             val foregroundService = ForegroundMonitorService.getInstance()
             if (foregroundService != null) {
@@ -78,9 +76,6 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
                     putExtra("show_overlay", true)
                     putExtra("overlay_type", type)
                     putExtra("overlay_message", message)
-                    if (gifUrl != null) {
-                        putExtra("gif_url", gifUrl)
-                    }
                 }
                 foregroundService.handleIntent(intent)
                 Log.d("FCM", "透過前景服務啟動 overlay 成功")

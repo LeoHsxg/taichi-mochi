@@ -16,7 +16,7 @@ interface FocusNativeModuleInterface {
 
   // 新增的三種 Overlay 類型
   showSelfDeclarationOverlay(message: string): void;
-  showGifLoopingOverlay(gifUrl: string): void;
+  showGifLoopingOverlay(): void;
   showForcedBlockingOverlay(message: string): void;
 }
 
