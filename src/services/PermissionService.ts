@@ -24,6 +24,7 @@ class PermissionService {
     };
 
     console.log('權限檢查結果:', result);
+    console.log('Android 版本:', Platform.Version);
     return result;
   }
 
@@ -51,14 +52,22 @@ class PermissionService {
     if (Platform.OS !== 'android') return true;
 
     try {
-      const hasPermission = await PermissionsAndroid.check(
-        PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS,
-      );
-      console.log('通知權限檢查結果:', hasPermission);
-      return hasPermission;
+      // Android 13 (API 33) 及以上版本需要檢查 POST_NOTIFICATIONS 權限
+      if (Platform.Version >= 33) {
+        const hasPermission = await PermissionsAndroid.check(
+          PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS,
+        );
+        console.log('通知權限檢查結果 (Android 13+):', hasPermission);
+        return hasPermission;
+      } else {
+        // Android 12 及以下版本，通知權限預設為允許
+        console.log('通知權限檢查結果 (Android 12-): 預設允許');
+        return true;
+      }
     } catch (error) {
       console.error('檢查通知權限失敗:', error);
-      return false;
+      // 如果檢查失敗，在 Android 12 及以下版本預設為允許
+      return Platform.Version < 33;
     }
   }
 
@@ -69,21 +78,29 @@ class PermissionService {
     if (Platform.OS !== 'android') return true;
 
     try {
-      const granted = await PermissionsAndroid.request(
-        PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS,
-        {
-          title: '通知權限',
-          message: '需要通知權限來發送專注提醒',
-          buttonNeutral: '稍後詢問',
-          buttonNegative: '取消',
-          buttonPositive: '確定',
-        },
-      );
-      console.log('通知權限請求結果:', granted);
-      return granted === PermissionsAndroid.RESULTS.GRANTED;
+      // Android 13 (API 33) 及以上版本需要請求 POST_NOTIFICATIONS 權限
+      if (Platform.Version >= 33) {
+        const granted = await PermissionsAndroid.request(
+          PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS,
+          {
+            title: '通知權限',
+            message: '需要通知權限來發送專注提醒',
+            buttonNeutral: '稍後詢問',
+            buttonNegative: '取消',
+            buttonPositive: '確定',
+          },
+        );
+        console.log('通知權限請求結果 (Android 13+):', granted);
+        return granted === PermissionsAndroid.RESULTS.GRANTED;
+      } else {
+        // Android 12 及以下版本，通知權限預設為允許
+        console.log('通知權限請求結果 (Android 12-): 預設允許');
+        return true;
+      }
     } catch (error) {
       console.error('請求通知權限失敗:', error);
-      return false;
+      // 如果請求失敗，在 Android 12 及以下版本預設為允許
+      return Platform.Version < 33;
     }
   }
 

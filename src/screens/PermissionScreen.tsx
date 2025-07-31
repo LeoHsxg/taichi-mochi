@@ -29,12 +29,11 @@ const PermissionScreen: React.FC<PermissionScreenProps> = ({
   }, []);
 
   useEffect(() => {
-    if (
-      permissions.usageAccess &&
-      permissions.overlayPermission &&
-      permissions.notificationPermission &&
-      permissions.accessibilityService
-    ) {
+    // 在 Android 12 上，通知權限預設為允許，所以我們主要檢查覆蓋權限和無障礙服務
+    const hasRequiredPermissions =
+      permissions.overlayPermission && permissions.accessibilityService;
+
+    if (hasRequiredPermissions) {
       onPermissionsGranted();
     }
   }, [permissions, onPermissionsGranted]);

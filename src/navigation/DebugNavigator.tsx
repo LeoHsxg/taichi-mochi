@@ -90,16 +90,14 @@ function DebugNavigator() {
   const initializeApp = useCallback(async () => {
     try {
       const permissions = await permissionService.checkAllPermissions();
-      setPermissionsGranted(
-        permissions.usageAccess &&
-          permissions.overlayPermission &&
-          permissions.notificationPermission,
-      );
-      if (
-        permissions.usageAccess &&
-        permissions.overlayPermission &&
-        permissions.notificationPermission
-      ) {
+      console.log('權限檢查結果:', permissions);
+
+      // 在 Android 12 上，通知權限預設為允許，所以我們主要檢查覆蓋權限
+      const hasRequiredPermissions = permissions.overlayPermission;
+
+      setPermissionsGranted(hasRequiredPermissions);
+
+      if (hasRequiredPermissions) {
         await initializeServices();
       }
       setIsInitialized(true);
